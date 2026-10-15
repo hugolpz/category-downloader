@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><title>CommonsFlow scale test</title></head>
+  <body style="font-family: sans-serif; margin: 1rem">
+    <h1>CommonsFlow scale test (dev only)</h1>
+    <p>
+      Seeds synthetic rows into the real IndexedDB, simulates downloads (no network, no disk), and times the exact
+      queries the progress panel runs. Run in Chrome. <code>?n=500000</code> sets the size.
+    </p>
+    <button id="run">Run</button> <button id="clean">Delete test data</button>
+    <pre id="out" style="background:#f4f4f4;padding:1rem;white-space:pre-wrap"></pre>
+    <script type="module" src="/src/dev/scale.js"></script>
+  </body>
+</html>
