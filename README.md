@@ -92,6 +92,8 @@ download, including how long it actually ran across all its pauses and reloads (
 the field, by typing, picking a suggestion or opening another address, and step 3 loads that category's last stats, or shows its resting
 placeholder if nothing was downloaded for it here. Reload the page and the stats are still there.
 
+Pressing **Start** (or **Resume**) scrolls the page to step 3 and moves keyboard focus to its heading, because the dashboard sits below the setup. People who prefer reduced motion get a jump instead of a smooth scroll.
+
 While a download runs, step 3 always shows it (there is one dashboard), whatever category the form above is on, and **Start** is disabled
 until it finishes or is paused; you can prepare the next one meanwhile.
 

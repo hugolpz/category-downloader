@@ -103,4 +103,21 @@ describe('starting or resuming a download', () => {
     await vi.waitFor(() => expect(store.phase).toBe('running'));
     expect(await store.attachCategory('Category:Something else')).toBe('busy');
   });
+
+  it('counts every Start or Resume in runStarts (the page scrolls to step 3 on it), but not merely viewing a download', async () => {
+    const job = await unfinishedJob();
+    const store = useJobStore();
+    expect(store.runStarts).toBe(0);
+    await store.attachCategory(job.root); // looking at saved stats: no run
+    expect(store.runStarts).toBe(0);
+
+    store.unfinished = withFolder(job);
+    engine.run.mockImplementation(async (_id, _dir, _token, onState) => onState({ phase: 'done' }));
+    await store.resume();
+    expect(store.runStarts).toBe(1);
+
+    store.unfinished = withFolder(job);
+    await store.resume();
+    expect(store.runStarts).toBe(2);
+  });
 });

@@ -74,8 +74,12 @@ export const useJobStore = defineStore('job', () => {
   }
 
   /** One run at a time across tabs (Web Locks); keeps the screen awake while running. */
+  /** Counts every Start or Resume, so the page can react to "a download just started" (it scrolls to step 3). */
+  const runStarts = ref(0);
+
   async function run(job, dir) {
     openJob(job); // before any await: the page may look at the store the moment the address changes
+    runStarts.value++;
     await applyLimits(job.id, auth.botSpeed === 'on');
     const res = await navigator.locks.request('commonsflow-run', { ifAvailable: true }, async (lock) => {
       if (!lock) {
@@ -174,6 +178,7 @@ export const useJobStore = defineStore('job', () => {
 
   return {
     jobId,
+    runStarts,
     phase,
     message,
     readme,

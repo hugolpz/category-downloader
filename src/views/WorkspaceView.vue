@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { normalizeCategory } from '../api/commons';
 import HeroIntro from '../components/organisms/HeroIntro.vue';
@@ -9,6 +9,7 @@ import ResumePrompt from '../components/molecules/ResumePrompt.vue';
 import { useAuthStore } from '../stores/auth';
 import { useJobStore } from '../stores/job';
 import { useSetupStore } from '../stores/setup';
+import { revealSection } from '../utils/revealSection';
 import { downloadStepState } from './workspaceState';
 
 // The whole app is this one page: 1. category, 2. folder + Start, 3. the download. The address only says which
@@ -69,6 +70,16 @@ watch(
 );
 onBeforeUnmount(() => clearTimeout(timer));
 
+// When a download starts (Start, or Resume), bring step 3 into view: the dashboard is below the setup, out of sight.
+const stepTitle = ref(null);
+watch(
+  () => job.runStarts,
+  async () => {
+    await nextTick(); // let the dashboard replace the placeholder first
+    revealSection(stepTitle.value);
+  },
+);
+
 // Options in the query (?cats=…&delay=…) fill the form.
 watch(
   () => route.query,
@@ -88,7 +99,7 @@ watch(
       <SetupPanel v-else @start="job.chooseFolderAndStart()" />
 
       <!-- step 3 -->
-      <section v-if="auth.loggedIn || step3 === 'ok'" id="step-download" class="flex flex-col gap-4">
+      <section v-if="auth.loggedIn || step3 === 'ok'" id="step-download" class="flex scroll-mt-4 flex-col gap-4">
         <header class="flex items-center gap-3">
           <span
             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display font-bold"
@@ -96,7 +107,7 @@ watch(
             >3</span
           >
           <div>
-            <h2 id="step-download-title" class="text-xl">Watch it download</h2>
+            <h2 id="step-download-title" ref="stepTitle" tabindex="-1" class="text-xl" style="outline: none">Watch it download</h2>
             <p class="muted text-sm">Speed, what was just saved, what comes next and the final summary appear here.</p>
           </div>
         </header>
