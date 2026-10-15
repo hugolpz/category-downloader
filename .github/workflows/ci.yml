@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an older run of the same branch/PR when a new commit arrives.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, test, build (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22] # the app needs Node >= 20 (see package.json "engines")
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Formatting (Prettier)
+        run: npx prettier --check "src/**/*.{js,vue}" "tests/**/*.js" "server/*.mjs" "*.js"
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Unit tests (Vitest)
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Starts the real server with dummy settings and checks that it serves the built app and the
+      # public login config (and never the secret). No Wikimedia account or network needed.
+      - name: Server smoke test
+        env:
+          OAUTH_CLIENT_ID: ci-client-id
+          OAUTH_CLIENT_SECRET: ci-client-secret
+          OAUTH_REDIRECT_URI: http://localhost:8787/oauth/wikimedia/success
+          PORT: 8787
+        run: |
+          node server/index.mjs &
+          server_pid=$!
+          trap 'kill $server_pid' EXIT
+          for i in $(seq 1 20); do
+            curl -fsS http://localhost:8787/auth/config >/dev/null 2>&1 && break
+            sleep 0.5
+          done
+          config="$(curl -fsS http://localhost:8787/auth/config)"
+          page="$(curl -fsS http://localhost:8787/)"
+          echo "$config"
+          # here-strings, not pipes: with `pipefail`, `grep -q` closing a pipe early can fail a good run
+          grep -q '"clientId":"ci-client-id"' <<<"$config"
+          if grep -q 'ci-client-secret' <<<"$config"; then echo "secret leaked in /auth/config"; exit 1; fi
+          grep -q '<div id="app">' <<<"$page"

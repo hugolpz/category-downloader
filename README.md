@@ -1,5 +1,7 @@
 # CommonsFlow
 
+[![CI](https://github.com/hugolpz/commons-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/hugolpz/commons-flow/actions/workflows/ci.yml)
+
 Download a whole [Wikimedia Commons](https://commons.wikimedia.org/) category (up to 500,000+ files) straight into a folder on your computer, with their metadata and licenses. If anything goes wrong (closed tab, crash, lost connection, expired login) it resumes exactly where it stopped.
 
 It runs in the browser: files go directly from Wikimedia to your disk, nothing is uploaded anywhere else.
