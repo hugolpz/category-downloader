@@ -5,3 +5,6 @@ dist/
 
 # Folders you pick as download targets while testing
 downloads/
+
+# Created by the server while installing a release (previous version kept for rollback)
+.deploy/

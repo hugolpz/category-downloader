@@ -2,8 +2,10 @@
 // The browser never sees the secret or the refresh token (kept in an httpOnly cookie).
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MAX_BODY_BYTES, installRelease, verifyRequest } from './deploy.mjs';
 import { loadDotEnv } from './dotenv.mjs';
 
 // Optional .env at the project root (visible and editable with nano on Toolforge). Real environment variables win.
@@ -18,7 +20,19 @@ const TOKEN_URL = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
 const API_URL = 'https://commons.wikimedia.org/w/api.php';
 // Wikimedia's UA policy wants a descriptive agent with contact info; browsers cannot set one, so we do.
 const USER_AGENT = `CommonsFlow/0.1 (${process.env.CONTACT ?? 'https://github.com/hugolpz'}) node`;
+const APP_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
+// Enables POST /deploy (GitHub Actions uploads). Absent or shorter than 32 characters = endpoint does not exist.
+const DEPLOY_SECRET = process.env.DEPLOY_SECRET;
+// Which release this process is running (written into dist/version.json by CI); read once at start.
+const RELEASE = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('../dist/version.json', import.meta.url), 'utf8'));
+  } catch {
+    return { sha: 'dev' };
+  }
+})();
+let deploying = false;
 const COOKIE = 'cf_rt';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 90;
 const SECURE = process.env.INSECURE_COOKIES ? '' : '; Secure';
@@ -122,6 +136,46 @@ async function handleApi(req, res, search) {
   res.end(Buffer.from(await up.arrayBuffer()));
 }
 
+async function readRaw(req, limit) {
+  const chunks = [];
+  let size = 0;
+  for await (const c of req) {
+    size += c.length;
+    if (size > limit) throw Object.assign(new Error('body too large'), { status: 413 });
+    chunks.push(c);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function handleDeploy(req, res) {
+  if (!DEPLOY_SECRET) return json(res, 404, { error: 'not_found' });
+  if (deploying) return json(res, 409, { error: 'deploy_in_progress' });
+  deploying = true;
+  try {
+    const body = await readRaw(req, MAX_BODY_BYTES);
+    const check = verifyRequest({
+      secret: DEPLOY_SECRET,
+      timestamp: req.headers['x-deploy-timestamp'],
+      signature: req.headers['x-deploy-signature'],
+      body,
+    });
+    if (!check.ok) {
+      console.warn(`deploy refused: ${check.reason}`);
+      return json(res, 401, { error: 'unauthorized' }); // no detail for the caller
+    }
+    await installRelease(APP_ROOT, body);
+    console.log('deploy installed, restarting to load the new release');
+    json(res, 200, { ok: true });
+    // Exit so the platform restarts us on the new files (Toolforge restarts a stopped web service container).
+    setTimeout(() => process.exit(0), 800);
+  } catch (e) {
+    console.error('deploy failed:', e.message);
+    if (!res.headersSent) json(res, e.status ?? 500, { error: e.status === 413 ? 'too_large' : 'deploy_failed' });
+  } finally {
+    deploying = false;
+  }
+}
+
 async function serveStatic(req, res, path) {
   const rel = normalize(decodeURIComponent(path)).replace(/^([/\\])+/, '');
   let file = join(DIST, rel || 'index.html');
@@ -144,6 +198,8 @@ createServer(async (req, res) => {
   try {
     const { pathname, search } = new URL(req.url, 'http://x');
     if (pathname === '/api/w') return await handleApi(req, res, search);
+    if (pathname === '/version' && req.method === 'GET') return json(res, 200, RELEASE);
+    if (pathname === '/deploy' && req.method === 'POST') return await handleDeploy(req, res);
     if (pathname.startsWith('/auth/')) return await handleAuth(req, res, pathname);
     return await serveStatic(req, res, pathname);
   } catch (e) {
