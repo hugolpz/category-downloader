@@ -201,6 +201,8 @@ createServer(async (req, res) => {
     if (pathname === '/version' && req.method === 'GET') return json(res, 200, RELEASE);
     if (pathname === '/deploy' && req.method === 'POST') return await handleDeploy(req, res);
     if (pathname.startsWith('/auth/')) return await handleAuth(req, res, pathname);
+    // The SPA fallback is for page loads only: a POST to an unknown path must not look like a success.
+    if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'method_not_allowed' });
     return await serveStatic(req, res, pathname);
   } catch (e) {
     console.error(e);
