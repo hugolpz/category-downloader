@@ -3,8 +3,13 @@ const API = '/api/w';
 
 export class AuthExpiredError extends Error {}
 
-/** Single place that talks to the Action API, through our relay: Bearer auth is forwarded server-side. */
-export async function apiGet(params, token) {
+/**
+ * Single place that talks to the Action API, through our relay: Bearer auth is forwarded server-side.
+ * @param {Record<string, string>} params
+ * @param {string} token
+ * @param {{ signal?: AbortSignal }} [options] lets a caller cancel a request that is no longer wanted
+ */
+export async function apiGet(params, token, { signal } = {}) {
   const url = new URL(API, location.origin);
   url.search = new URLSearchParams({
     format: 'json',
@@ -13,6 +18,7 @@ export async function apiGet(params, token) {
   }).toString();
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}`, 'X-Requested-With': 'CommonsFlow' },
+    signal,
   });
   if (res.status === 401) throw new AuthExpiredError('Access token expired');
   if (res.status === 429) throw new Error(`Rate limited (retry after ${res.headers.get('Retry-After') ?? '?'}s)`);

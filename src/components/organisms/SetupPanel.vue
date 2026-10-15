@@ -1,9 +1,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { CdxButton, CdxCheckbox, CdxIcon, CdxMessage, CdxTextInput } from '@wikimedia/codex';
+import { CdxButton, CdxCheckbox, CdxIcon, CdxLookup, CdxMessage } from '@wikimedia/codex';
 import { cdxIconCheck, cdxIconFolderPlaceholder, cdxIconLink, cdxIconSearch } from '@wikimedia/codex-icons';
 import { useAuthStore } from '../../stores/auth';
 import { useSetupStore } from '../../stores/setup';
+import { suggestCategories, toMenuItem } from '../../api/suggestions';
+import { useCategorySuggestions } from '../../composables/useCategorySuggestions';
 import { useCyclingPlaceholder } from '../../composables/useCyclingPlaceholder';
 import { EXAMPLE_CATEGORIES } from '../../utils/exampleCategories';
 
@@ -19,6 +21,25 @@ function onCategoryKeydown(event) {
   setup.form.category = placeholder.value;
 }
 const emit = defineEmits(['start']);
+
+// Real Commons categories are suggested from 5 typed characters on (debounced, cancellable, cached).
+const {
+  items: suggestionItems,
+  searched,
+  pending: searching,
+  onInput: searchSuggestions,
+} = useCategorySuggestions({ search: (typed, signal) => suggestCategories(typed, auth.token, { signal }) });
+const menuItems = computed(() => suggestionItems.value.map(toMenuItem));
+const selected = ref(null);
+function onTyping(text) {
+  if (text === selected.value) return; // the box also fires this when a suggestion fills it in: do not search again
+  searchSuggestions(text);
+}
+function onPick(value) {
+  if (!value) return;
+  setup.form.category = value;
+  void setup.check(); // a suggestion is a real category: check it right away
+}
 
 // Check the category once logged in (covers URL prefill).
 watch(
@@ -55,16 +76,23 @@ async function copyLink() {
       </header>
 
       <div class="flex items-start gap-2">
-        <CdxTextInput
+        <CdxLookup
           id="category-input"
-          v-model="setup.form.category"
+          v-model:selected="selected"
+          v-model:input-value="setup.form.category"
+          :menu-items="menuItems"
+          :menu-config="{ visibleItemLimit: 8 }"
           class="flex-1"
           :placeholder="placeholder"
           :start-icon="cdxIconSearch"
           aria-label="Category name"
+          @input="onTyping"
+          @update:selected="onPick"
           @keydown="onCategoryKeydown"
           @keyup.enter="setup.check()"
-        />
+        >
+          <template v-if="searched && !searching" #no-results>No matching category found.</template>
+        </CdxLookup>
         <CdxButton id="category-check-button" :disabled="setup.busy || !setup.form.category" @click="setup.check()">{{
           setup.busy ? 'Checking…' : 'Check'
         }}</CdxButton>
