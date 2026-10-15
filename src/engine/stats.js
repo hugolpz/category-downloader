@@ -16,6 +16,7 @@ export async function readProgress(db, id) {
     enumDone: job?.enumDone ?? false,
     approxTotal: job?.approxTotal ?? 0,
     recent: c?.recent ?? [],
+    activeMs: c?.activeMs ?? 0,
     upcoming: window
       .filter((r) => r.status === 'pending')
       .slice(0, 20)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatDuration, formatRate } from '../src/utils/format';
-import { sessionSummary } from '../src/utils/session';
+import { averageSpeed } from '../src/utils/session';
 
 describe('format', () => {
   it('formats durations', () => {
@@ -17,15 +17,15 @@ describe('format', () => {
   });
 });
 
-describe('sessionSummary', () => {
-  it('is empty before any run', () => {
-    expect(sessionSummary({ startedAt: 0, startDone: 0, endedAt: 0 }, 5, 1000)).toEqual({ elapsedMs: 0, perSecond: 0 });
+describe('averageSpeed (files per second over the saved total running time)', () => {
+  it('is 0 when there is no timing yet (an older download, or one that has not run)', () => {
+    expect(averageSpeed(50, 0)).toBe(0);
+    expect(averageSpeed(0, 0)).toBe(0);
+    expect(averageSpeed(50, undefined)).toBe(0);
   });
-  it('averages over the running time', () => {
-    expect(sessionSummary({ startedAt: 1000, startDone: 0, endedAt: 0 }, 50, 11_000)).toEqual({ elapsedMs: 10_000, perSecond: 5 });
-  });
-  it('freezes once ended, however late "now" is, and only counts this session\'s files', () => {
-    const s = { startedAt: 0 + 1000, startDone: 100, endedAt: 21_000 };
-    expect(sessionSummary(s, 300, 9_999_999)).toEqual({ elapsedMs: 20_000, perSecond: 10 });
+  it('divides the files saved by the time the download actually ran', () => {
+    expect(averageSpeed(50, 10_000)).toBe(5);
+    expect(averageSpeed(1200, 600_000)).toBe(2);
+    expect(averageSpeed(1, 4_000)).toBe(0.25);
   });
 });

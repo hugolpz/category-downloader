@@ -1,5 +1,6 @@
 import { apiGet, AuthExpiredError } from '../api/commons';
 import { db } from './db';
+import { trackActiveTime } from './activeTime';
 import { runDownloads, sleep } from './downloader';
 import { runEnumeration } from './enumerator';
 import { writeMetadataShard } from './metadata';
@@ -43,13 +44,16 @@ export class Engine {
     };
 
     let sink;
+    let timing; // how long this run lasted, added to the job's saved total
     const finish = async (phase, message) => {
+      await timing?.stop();
       const readme = sink ? await writeReadme(db, sink, jobId, phase).catch(() => undefined) : undefined;
       onState({ phase, message, readme });
     };
 
     try {
       onState({ phase: 'running' });
+      timing = trackActiveTime(db, jobId);
       const job = await db.jobs.get(jobId);
       if (!job) throw new Error('Job not found');
       const out = (sink = fsaSink(dir, job.folder));

@@ -39,6 +39,7 @@
  * @property {number} failed
  * @property {number} lowWater Lowest seq not yet finished. Resume scans forward from here; rows above it that are done are skipped.
  * @property {string[]} recent Names of the last 20 finished files, newest first (the "previous files" log).
+ * @property {number} [activeMs] Total time the download actually ran, summed over all its runs (see activeTime.js). Absent on older jobs.
  */
 
 /**

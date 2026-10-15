@@ -37,8 +37,6 @@ const eta = computed(() => {
   const left = Math.max(0, p.total - finished.value);
   return running.value && p.perSecond && left ? formatDuration((left / p.perSecond) * 1000) : '—';
 });
-const timeLabel = computed(() => (p.freshRun ? 'Time taken' : 'This session'));
-
 const tiles = computed(() =>
   celebrate.value
     ? [
@@ -49,8 +47,8 @@ const tiles = computed(() =>
           hint: p.counts.failed ? `${p.counts.failed.toLocaleString()} to retry` : 'No failures',
           tone: 'good',
         },
-        { id: 'stat-average-speed', label: 'Average speed', value: formatRate(p.summary.perSecond) },
-        { id: 'stat-time-taken', label: timeLabel.value, value: formatDuration(p.summary.elapsedMs) },
+        { id: 'stat-average-speed', label: 'Average speed', value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
+        { id: 'stat-time-taken', label: 'Time taken', value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
         { id: 'stat-folder', label: 'Saved in', value: folder.value, hint: 'inside the folder you picked' },
       ]
     : [
@@ -63,8 +61,10 @@ const tiles = computed(() =>
         },
         running.value
           ? { id: 'stat-speed', label: 'Speed', value: formatRate(p.perSecond) }
-          : { id: 'stat-session-average', label: 'Session average', value: formatRate(p.summary.perSecond) },
-        { id: 'stat-time-left', label: 'Time left', value: eta.value },
+          : { id: 'stat-average-speed', label: 'Average speed', value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
+        running.value
+          ? { id: 'stat-time-left', label: 'Time left', value: eta.value }
+          : { id: 'stat-time-taken', label: 'Time spent', value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
         { id: 'stat-waiting', label: 'Waiting', value: p.counts.pending.toLocaleString() },
       ],
 );
@@ -90,7 +90,9 @@ const tiles = computed(() =>
           <h2 id="progress-title" class="text-2xl" style="color: var(--ink-on-dark)">{{ title }}</h2>
           <p id="finish-summary" style="color: var(--ink-on-dark-muted)">
             <strong class="num" style="color: var(--ink-on-dark)">{{ p.counts.done.toLocaleString() }}</strong> files saved to
-            <strong style="color: var(--ink-on-dark)">{{ folder }}</strong> in {{ formatDuration(p.summary.elapsedMs) }}.
+            <strong style="color: var(--ink-on-dark)">{{ folder }}</strong
+            ><template v-if="p.hasTiming"> in {{ formatDuration(p.activeMs) }}</template
+            >.
             <template v-if="p.counts.failed">{{ p.counts.failed.toLocaleString() }} just need another try.</template>
           </p>
         </div>

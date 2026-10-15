@@ -2,8 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
 import { db } from '../engine/db';
 import { readProgress } from '../engine/stats';
-
-import { sessionSummary } from '../utils/session';
+import { averageSpeed } from '../utils/session';
 import { useJobStore } from './job';
 
 /** Polls indexed counts and two tiny windows from IndexedDB: memory and DOM stay constant at any job size. */
@@ -14,10 +13,11 @@ export const useProgressStore = defineStore('progress', () => {
   const enumDone = ref(false);
   const recent = ref([]);
   const upcoming = ref([]);
-  const perSecond = ref(0); // live speed, only meaningful while running
-  const nowMs = ref(Date.now());
-  // Timing of the current run in this page session; frozen when the run ends.
-  const session = reactive({ startedAt: 0, startDone: 0, endedAt: 0 });
+  const perSecond = ref(0); // live speed (last 30 s), only meaningful while running
+  /** Total time the download actually ran, saved with it: survives pauses and reloads. */
+  const activeMs = ref(0);
+  // The current run in this page: only used to know when to stop polling (everything saved, or the engine ended).
+  const session = reactive({ endedAt: 0, startedAt: 0 });
   const job = useJobStore();
   const samples = [];
   let timer;
@@ -34,9 +34,10 @@ export const useProgressStore = defineStore('progress', () => {
     total.value = snap.enumDone ? snap.enumerated : Math.max(snap.approxTotal, snap.enumerated);
     recent.value = snap.recent;
     upcoming.value = snap.upcoming;
+    activeMs.value = snap.activeMs;
     const done = snap.counts.done;
 
-    const now = (nowMs.value = Date.now());
+    const now = Date.now();
     // Everything is saved: stop the clocks at the moment we see it, not when the README is written.
     if (session.startedAt && !session.endedAt && snap.enumDone && snap.counts.pending === 0) session.endedAt = now;
     if (session.endedAt) {
@@ -69,7 +70,7 @@ export const useProgressStore = defineStore('progress', () => {
       if (!current) return;
       if (phase === 'running' && prev !== 'running') {
         await tick();
-        Object.assign(session, { startedAt: Date.now(), startDone: counts.done, endedAt: 0 });
+        Object.assign(session, { startedAt: Date.now(), endedAt: 0 });
         samples.length = 0;
         startPolling();
       } else if (phase === 'done' || phase === 'stopped' || phase === 'paused-auth' || phase === 'error') {
@@ -81,9 +82,10 @@ export const useProgressStore = defineStore('progress', () => {
     },
   );
 
-  /** Elapsed time and average speed of this run; live while running, frozen after. */
-  const summary = computed(() => sessionSummary(session, counts.done, nowMs.value));
-  const freshRun = computed(() => session.startDone === 0);
+  /** Files per second over the whole download (all runs), from the saved totals. */
+  const averagePerSecond = computed(() => averageSpeed(counts.done, activeMs.value));
+  /** False for a download saved before timing existed, or one that has not run yet. */
+  const hasTiming = computed(() => activeMs.value > 0);
   onScopeDispose(() => clearInterval(timer));
 
   const failures = () => db.failures.where('[jobId+seq]').between([current, 0], [current, Infinity]);
@@ -107,5 +109,20 @@ export const useProgressStore = defineStore('progress', () => {
     );
   }
 
-  return { counts, total, enumerated, enumDone, recent, upcoming, perSecond, summary, freshRun, watchJob, failedPage, exportFailed, tick };
+  return {
+    counts,
+    total,
+    enumerated,
+    enumDone,
+    recent,
+    upcoming,
+    perSecond,
+    activeMs,
+    averagePerSecond,
+    hasTiming,
+    watchJob,
+    failedPage,
+    exportFailed,
+    tick,
+  };
 });
