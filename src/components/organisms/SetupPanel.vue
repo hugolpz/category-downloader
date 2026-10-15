@@ -4,10 +4,20 @@ import { CdxButton, CdxCheckbox, CdxIcon, CdxMessage, CdxTextInput } from '@wiki
 import { cdxIconCheck, cdxIconFolderPlaceholder, cdxIconLink, cdxIconSearch } from '@wikimedia/codex-icons';
 import { useAuthStore } from '../../stores/auth';
 import { useSetupStore } from '../../stores/setup';
+import { useCyclingPlaceholder } from '../../composables/useCyclingPlaceholder';
+import { EXAMPLE_CATEGORIES } from '../../utils/exampleCategories';
 
 const auth = useAuthStore();
 const setup = useSetupStore();
 const copied = ref(false);
+
+// The field shows a different real category every 3 s; Tab on an empty field fills it in.
+const placeholder = useCyclingPlaceholder(EXAMPLE_CATEGORIES, 3000);
+function onCategoryKeydown(event) {
+  if (event.key !== 'Tab' || event.shiftKey || setup.form.category) return; // otherwise Tab moves focus as usual
+  event.preventDefault();
+  setup.form.category = placeholder.value;
+}
 const emit = defineEmits(['start']);
 
 // Check the category once logged in (covers URL prefill).
@@ -49,15 +59,20 @@ async function copyLink() {
           id="category-input"
           v-model="setup.form.category"
           class="flex-1"
-          placeholder="e.g. Lingua Libre pronunciation-fra"
+          :placeholder="placeholder"
           :start-icon="cdxIconSearch"
           aria-label="Category name"
+          @keydown="onCategoryKeydown"
           @keyup.enter="setup.check()"
         />
         <CdxButton id="category-check-button" :disabled="setup.busy || !setup.form.category" @click="setup.check()">{{
           setup.busy ? 'Checking…' : 'Check'
         }}</CdxButton>
       </div>
+
+      <p v-if="!setup.form.category" id="category-tab-hint" class="muted mt-2 text-xs">
+        Press <kbd class="rounded border border-line bg-sunken px-1 font-mono">Tab</kbd> to use the suggestion.
+      </p>
 
       <CdxMessage v-if="setup.error" id="category-error" type="error" class="mt-3">{{ setup.error }}</CdxMessage>
       <p v-if="setup.rootInfo" id="category-summary" class="mt-4 flex items-center gap-2 text-base">
