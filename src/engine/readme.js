@@ -1,4 +1,5 @@
 import { EXTMETADATA_KEYS, IIPROP } from './enumerator';
+import { jobRoot } from '../utils/categoryPath';
 
 // The wording lives in a plain Markdown file so it can be edited without touching code.
 import template from './readme.template.md?raw';
@@ -29,7 +30,8 @@ export function renderTemplate(tpl, values, flags) {
 }
 
 export function buildReadme({ job, phase, counts, failed, now }) {
-  const [root, ...subs] = job.categories;
+  const root = jobRoot(job);
+  const subs = job.categories.filter((c) => c !== root);
   const listed = counts.done + counts.failed + counts.pending;
   const hidden = counts.failed - MAX_FAILED_LISTED;
   const failedLines = failed
@@ -59,6 +61,7 @@ export function buildReadme({ job, phase, counts, failed, now }) {
   };
   const flags = {
     has_subcategories: subs.length > 0,
+    root_excluded: !job.categories.includes(root),
     has_failed: counts.failed > 0,
     listing_unfinished: !job.enumDone,
     not_done: phase !== 'done',

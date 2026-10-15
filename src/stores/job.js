@@ -121,7 +121,7 @@ export const useJobStore = defineStore('job', () => {
 
   async function startNew(dir) {
     const setup = useSetupStore();
-    const job = await createJob(setup.rootTitle, setup.form, dir, setup.approxTotal, auth.botSpeed === 'on');
+    const job = await createJob(setup.rootTitle, setup.selectedCategories, setup.form, dir, setup.approxTotal, auth.botSpeed === 'on');
     unfinished.value = null;
     void appRouter().push(categoryLocation(jobRoot(job))); // the download's page; `run` below fills the store
     await run(job, dir);

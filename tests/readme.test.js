@@ -74,4 +74,36 @@ describe('README', () => {
   it('template engine: if/else, unknown names stay visible', () => {
     expect(renderTemplate('a {{#if x}}YES{{else}}NO{{/if}} {{who}} {{typo}}', { who: 'me' }, { x: false })).toBe('a NO me {{typo}}\n');
   });
+
+  describe('when the top category itself is not downloaded', () => {
+    const noRoot = {
+      ...job,
+      root: 'Category:Lingua Libre pronunciation-fra',
+      categories: ['Category:Lingua Libre pronunciation-fra/Sub A', 'Category:Lingua Libre pronunciation-fra/Sub B'],
+    };
+    const readme = (j) => buildReadme({ job: j, phase: 'done', counts: { done: 5, failed: 0, pending: 0 }, failed: [], now: new Date(0) });
+
+    it('is still titled and linked after the top category, and says its own files are not included', () => {
+      const t = readme(noRoot);
+      expect(t).toContain('# Lingua Libre pronunciation-fra\n');
+      expect(t).toContain('Category:Lingua_Libre_pronunciation-fra>');
+      expect(t).toContain("**Top category's own files:** not included");
+      expect(t).toContain('**Subcategories (2):**');
+      expect(t).toContain('Sub_A');
+    });
+
+    it('says nothing about it when the top category is included', () => {
+      const t = readme({ ...noRoot, categories: [noRoot.root, ...noRoot.categories] });
+      expect(t).not.toContain("Top category's own files");
+      expect(t).toContain('**Subcategories (2):**');
+    });
+
+    it('older jobs without a root field use the first category', () => {
+      const legacy = { ...noRoot };
+      delete legacy.root;
+      const t = readme({ ...legacy, categories: ['Category:Old top', 'Category:Old top/A'] });
+      expect(t).toContain('# Old top\n');
+      expect(t).not.toContain("Top category's own files");
+    });
+  });
 });

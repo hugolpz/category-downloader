@@ -46,8 +46,8 @@ describe('setup store: address ↔ form', () => {
   it('applyQuery sets the options but never touches the category', () => {
     const setup = useSetupStore();
     setup.setCategory('Category:Foo');
-    setup.applyQuery({ subcats: 'Category:A|Category:B', delay: '500', concurrency: '2' });
-    expect(setup.form).toMatchObject({ category: 'Category:Foo', subcats: ['Category:A', 'Category:B'], delayMs: 500, concurrency: 2 });
+    setup.applyQuery({ cats: 'Category:Foo|Category:Foo/B', delay: '500', concurrency: '2' });
+    expect(setup.form).toMatchObject({ category: 'Category:Foo', cats: ['Category:Foo', 'Category:Foo/B'], delayMs: 500, concurrency: 2 });
     expect(setup.includeSubcats).toBe(true);
   });
 
@@ -94,5 +94,118 @@ describe('setup store: address ↔ form', () => {
     setup.form.delayMs = 700;
     await vi.waitFor(() => expect(appRouter().currentRoute.value.query).toEqual({ delay: '700' }));
     expect(appRouter().currentRoute.value.path).toBe('/Category:Foo_bar');
+  });
+});
+
+describe('setup store: which categories are downloaded (the top one can be left out)', () => {
+  const checked = async (
+    category = 'Category:Foo',
+    subs = [
+      { title: 'Category:Foo/A', files: 10, subcats: 0 },
+      { title: 'Category:Foo/B', files: 5, subcats: 0 },
+    ],
+  ) => {
+    const { listSubcategories } = await import('../src/api/commons');
+    listSubcategories.mockResolvedValue(subs);
+    useAuthStore().token = 'token';
+    const setup = useSetupStore();
+    setup.form.category = category;
+    return setup;
+  };
+
+  it('by default (no selection) only the top category is downloaded', async () => {
+    const setup = await checked();
+    await setup.check();
+    expect(setup.form.cats).toBeNull();
+    expect(setup.includeSubcats).toBe(false);
+    expect(setup.selectedCategories).toEqual(['Category:Foo']);
+    expect(setup.approxTotal).toBe(7);
+    expect(setup.canStart).toBe(true);
+  });
+
+  it('ticking "include subcategories" starts with the top category selected and lists it first in the table', async () => {
+    const setup = await checked();
+    await setup.check();
+    setup.includeSubcats = true;
+    await vi.waitFor(() => expect(setup.subcategories).toHaveLength(2));
+    expect(setup.form.cats).toEqual(['Category:Foo']);
+    expect(setup.selectionRows.map((r) => [r.title, r.isTop, r.files])).toEqual([
+      ['Category:Foo', true, 7],
+      ['Category:Foo/A', false, 10],
+      ['Category:Foo/B', false, 5],
+    ]);
+  });
+
+  it("the top category's files are downloaded only while its own title is selected", async () => {
+    const setup = await checked();
+    await setup.check();
+    setup.includeSubcats = true;
+    await vi.waitFor(() => expect(setup.subcategories).toHaveLength(2));
+    setup.form.cats = ['Category:Foo', 'Category:Foo/B'];
+    expect(setup.selectedCategories).toEqual(['Category:Foo', 'Category:Foo/B']);
+    expect(setup.approxTotal).toBe(12);
+    setup.form.cats = ['Category:Foo/A', 'Category:Foo/B']; // top category unticked: its 7 files are out
+    expect(setup.selectedCategories).toEqual(['Category:Foo/A', 'Category:Foo/B']);
+    expect(setup.approxTotal).toBe(15);
+    expect(setup.canStart).toBe(true);
+  });
+
+  it('keeps table order whatever order the boxes were ticked in', async () => {
+    const setup = await checked();
+    await setup.check();
+    setup.includeSubcats = true;
+    await vi.waitFor(() => expect(setup.subcategories).toHaveLength(2));
+    setup.form.cats = ['Category:Foo/B', 'Category:Foo', 'Category:Foo/A'];
+    expect(setup.selectedCategories).toEqual(['Category:Foo', 'Category:Foo/A', 'Category:Foo/B']);
+  });
+
+  it('nothing selected means nothing to start', async () => {
+    const setup = await checked();
+    await setup.check();
+    setup.includeSubcats = true;
+    await vi.waitFor(() => expect(setup.subcategories).toHaveLength(2));
+    setup.form.cats = [];
+    expect(setup.selectedCategories).toEqual([]);
+    expect(setup.canStart).toBe(false);
+    expect(setup.approxTotal).toBe(0);
+  });
+
+  it('unticking "include subcategories" goes back to the default (just the top category)', async () => {
+    const setup = await checked();
+    await setup.check();
+    setup.includeSubcats = true;
+    await vi.waitFor(() => expect(setup.subcategories).toHaveLength(2));
+    setup.form.cats = ['Category:Foo/A'];
+    setup.includeSubcats = false;
+    expect(setup.form.cats).toBeNull();
+    expect(setup.selectedCategories).toEqual(['Category:Foo']);
+  });
+
+  it('a link with a selection (top category absent) is honoured after Check, and stale titles are dropped', async () => {
+    const setup = await checked();
+    setup.applyQuery({ cats: 'Category:Foo/A|Category:Not_a_child' });
+    await setup.check();
+    expect(setup.form.cats).toEqual(['Category:Foo/A']); // the top category was NOT listed: its files stay out
+    expect(setup.selectedCategories).toEqual(['Category:Foo/A']);
+    expect(setup.includeSubcats).toBe(true);
+  });
+
+  it('changing the top category resets the selection', () => {
+    const setup = useSetupStore();
+    setup.setCategory('Category:Foo');
+    setup.form.cats = ['Category:Foo/A'];
+    setup.setCategory('Category:Other');
+    expect(setup.form.cats).toBeNull();
+  });
+
+  it('the share link carries the selection, including whether the top category is in it', () => {
+    const setup = useSetupStore();
+    setup.setCategory('Category:Foo bar');
+    setup.form.cats = ['Category:Foo bar/A'];
+    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar?cats=Category:Foo_bar/A');
+    setup.form.cats = ['Category:Foo bar', 'Category:Foo bar/A'];
+    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar?cats=Category:Foo_bar|Category:Foo_bar/A');
+    setup.form.cats = null;
+    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar');
   });
 });

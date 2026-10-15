@@ -57,7 +57,9 @@
 /**
  * @typedef {object} Job
  * @property {string} id
- * @property {string[]} categories Root category plus chosen subcategories (full titles, "Category:…"), enumerated in order.
+ * @property {string} [root] Top category the download belongs to ("Category:Foo"). Absent on older jobs: use categories[0].
+ * @property {string[]} categories The categories listed and downloaded, in order (full titles, "Category:…"). Includes `root`
+ *   only if the top category's own files were selected; it can be only subcategories.
  * @property {Record<string, CategoryCursor>} cursors
  * @property {boolean} enumDone
  * @property {number} pageSize

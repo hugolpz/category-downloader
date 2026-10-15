@@ -8,31 +8,59 @@ import { buildQuery, buildQueryObject, parseParams } from '../utils/urlParams';
 
 /**
  * The setup form. Its address-bar twin: the category is the path (/Category:Foo_bar), the other options are the
- * query (?subcats=…&delay=…&concurrency=…). Opening such a URL fills the form (setCategory / applyQuery); a
+ * query (?cats=…&delay=…&concurrency=…). Opening such a URL fills the form (setCategory / applyQuery); a
  * successful Check moves the address to the checked category.
+ *
+ * `form.cats` says which categories to download: null = just the top one; a list = exactly those, where the top
+ * category's own files are included only if its title is in the list.
  */
 export const useSetupStore = defineStore('setup', () => {
   const auth = useAuthStore();
   const form = reactive({ category: '', ...parseParams(location.search) });
   const subcategories = ref([]);
-  const includeSubcats = ref(form.subcats.length > 0);
   const rootInfo = ref(null);
   const busy = ref(false);
   const error = ref(null);
 
   const rootTitle = computed(() => normalizeCategory(form.category));
-  const approxTotal = computed(() => {
-    const sub = subcategories.value.filter((s) => form.subcats.includes(s.title)).reduce((n, s) => n + s.files, 0);
-    return (rootInfo.value?.files ?? 0) + sub;
+
+  /** "Also download subcategories": on = a selection list (the top category selected to begin with), off = just the top one. */
+  const includeSubcats = computed({
+    get: () => form.cats !== null,
+    set(on) {
+      form.cats = on ? (rootTitle.value ? [rootTitle.value] : []) : null;
+      if (on) void check(); // list the subcategories
+    },
   });
-  /** What "Copy share link" copies: /Category:Foo_bar?subcats=… (or just / while no category is typed). */
+
+  /** The rows of the selection table: the top category first, so its own files can be included or left out. */
+  const selectionRows = computed(() =>
+    rootInfo.value
+      ? [{ title: rootTitle.value, files: rootInfo.value.files, isTop: true }, ...subcategories.value.map((s) => ({ ...s, isTop: false }))]
+      : [],
+  );
+
+  /** What will be listed and downloaded, in table order. */
+  const selectedCategories = computed(() => {
+    if (form.cats === null) return rootTitle.value ? [rootTitle.value] : [];
+    const order = new Map(selectionRows.value.map((r, i) => [r.title, i]));
+    return [...form.cats].sort((a, b) => (order.get(a) ?? Infinity) - (order.get(b) ?? Infinity));
+  });
+  const canStart = computed(() => selectedCategories.value.length > 0);
+
+  const approxTotal = computed(() => {
+    const files = new Map(selectionRows.value.map((r) => [r.title, r.files]));
+    return selectedCategories.value.reduce((n, c) => n + (files.get(c) ?? 0), 0);
+  });
+
+  /** What "Copy share link" copies: /Category:Foo_bar?cats=… (or just / while no category is typed). */
   const shareUrl = computed(() => {
     const target = form.category ? categoryLocation(form.category) : { name: 'home' };
     return location.origin + appRouter().resolve({ ...target, query: buildQueryObject(form) }).href;
   });
 
   /**
-   * Put the category from the URL into the field. Whatever was checked for the previous category is dropped.
+   * Put the category from the URL into the field. Whatever was checked or selected for the previous category is dropped.
    * @param {string} value e.g. "Category:Foo_bar"
    * @returns {boolean} whether the field changed
    */
@@ -40,6 +68,7 @@ export const useSetupStore = defineStore('setup', () => {
     const next = String(value ?? '');
     if (normalizeCategory(next) === normalizeCategory(form.category)) return false;
     form.category = next;
+    form.cats = null;
     rootInfo.value = null;
     subcategories.value = [];
     error.value = null;
@@ -51,7 +80,6 @@ export const useSetupStore = defineStore('setup', () => {
     const next = parseParams(query);
     if (buildQuery(next) === buildQuery(form)) return;
     Object.assign(form, next); // options only: the category comes from the path
-    includeSubcats.value = next.subcats.length > 0;
   }
 
   /** Make the address match the checked category: /Category:Foo_bar plus the options. */
@@ -73,6 +101,11 @@ export const useSetupStore = defineStore('setup', () => {
       if (!info?.exists) throw new Error(`${rootTitle.value} does not exist`);
       rootInfo.value = info;
       subcategories.value = includeSubcats.value ? await listSubcategories(rootTitle.value, auth.token, auth.botSpeed === 'on') : [];
+      if (form.cats !== null) {
+        // Drop selected titles that are not this category's top or subcategories (a stale link, a renamed category).
+        const valid = new Set([rootTitle.value, ...subcategories.value.map((s) => s.title)]);
+        form.cats = form.cats.filter((c) => valid.has(c));
+      }
       showCategoryInUrl();
     } catch (e) {
       rootInfo.value = null;
@@ -82,10 +115,6 @@ export const useSetupStore = defineStore('setup', () => {
     }
   }
 
-  watch(includeSubcats, (on) => {
-    if (!on) form.subcats = [];
-    void check();
-  });
   // Options (not the category, which only changes the address on Check) are mirrored into the query string.
   watch(
     () => buildQuery(form),
@@ -97,5 +126,21 @@ export const useSetupStore = defineStore('setup', () => {
     },
   );
 
-  return { form, setCategory, applyQuery, subcategories, includeSubcats, rootInfo, busy, error, rootTitle, approxTotal, shareUrl, check };
+  return {
+    form,
+    setCategory,
+    applyQuery,
+    subcategories,
+    selectionRows,
+    selectedCategories,
+    canStart,
+    includeSubcats,
+    rootInfo,
+    busy,
+    error,
+    rootTitle,
+    approxTotal,
+    shareUrl,
+    check,
+  };
 });

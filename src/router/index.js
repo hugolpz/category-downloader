@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { hasPendingLogin } from '../auth/oauth';
 import { useAuthStore } from '../stores/auth';
-import { categoryLocation } from '../utils/categoryPath';
+import { normalizeCategory } from '../api/commons';
+import { categoryLocation, categoryParam } from '../utils/categoryPath';
 
 /**
  * Every URL the app answers (history mode; server/index.mjs serves index.html for any unknown GET path).
@@ -9,7 +10,8 @@ import { categoryLocation } from '../utils/categoryPath';
  *   /              start page: type a category, then press Check (the address becomes /Category:…)
  *   /Category:Foo_bar  the same single page with that category already in the field (and its download, if this
  *                  browser has one, shown in step 3). Same spelling as Commons URLs. Optional
- *                  options in the query: ?subcats=Category:A|Category:B&delay=500&concurrency=2
+ *                  options in the query: ?cats=Category:Foo|Category:Foo/Sub&delay=500&concurrency=2
+ *                  (`cats` = categories to download; the top one's own files only if it is listed)
  *   anything else  friendly "not found"
  *
  * The login callback (/oauth/wikimedia/success?code=…, or the root) needs no route of its own: the
@@ -49,6 +51,16 @@ export function createAppRouter({ history = createWebHistory(), routeTable = rou
     if (to.name === 'home' && typeof to.query.category === 'string' && to.query.category) {
       const { category, ...query } = to.query;
       return { ...categoryLocation(category), query, replace: true };
+    }
+  });
+
+  // Old links used ?subcats=A|B, which always included the top category: it becomes ?cats=<top>|A|B.
+  router.beforeEach((to) => {
+    if (to.name === 'category' && typeof to.query.subcats === 'string' && to.query.cats === undefined) {
+      const { subcats, ...rest } = to.query;
+      const top = normalizeCategory(String(to.params.category));
+      const cats = [top, ...subcats.split('|').filter(Boolean)].map(categoryParam).join('|');
+      return { ...categoryLocation(top), query: { ...rest, cats }, replace: true };
     }
   });
 

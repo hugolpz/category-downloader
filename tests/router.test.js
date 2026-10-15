@@ -102,3 +102,23 @@ describe('login callback guard', () => {
     expect(completeLogin).not.toHaveBeenCalled();
   });
 });
+
+describe('old ?subcats= links', () => {
+  it('become ?cats= with the top category added, because the old links always included it', async () => {
+    const r = make();
+    await r.push('/Category:Foo_bar?subcats=Category:Foo_bar/A|Category:Foo_bar/B&delay=500');
+    expect(r.currentRoute.value.path).toBe('/Category:Foo_bar');
+    expect(r.currentRoute.value.query).toEqual({ cats: 'Category:Foo_bar|Category:Foo_bar/A|Category:Foo_bar/B', delay: '500' });
+  });
+  it('chain after the old ?category= redirect', async () => {
+    const r = make();
+    await r.push('/?category=Foo&subcats=Category:Foo/A');
+    expect(r.currentRoute.value.path).toBe('/Category:Foo');
+    expect(r.currentRoute.value.query).toEqual({ cats: 'Category:Foo|Category:Foo/A' });
+  });
+  it('leave a URL that already has ?cats= alone', async () => {
+    const r = make();
+    await r.push('/Category:Foo?cats=Category:Foo/A&subcats=ignored');
+    expect(r.currentRoute.value.query).toEqual({ cats: 'Category:Foo/A', subcats: 'ignored' });
+  });
+});

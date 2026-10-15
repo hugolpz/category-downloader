@@ -9,7 +9,7 @@
   Values:  name, status, downloaded, listed, failed_count, started, updated,
            source_url, folder, page_size, batch_size, iiprop, extmetadata_filter, category_param, api_url,
            subcategory_count, subcategory_list, failed_list
-  Flags:   has_subcategories, has_failed, listing_unfinished, not_done
+  Flags:   has_subcategories, root_excluded, has_failed, listing_unfinished, not_done
 
   This comment is removed from the generated file.
 -->
@@ -21,7 +21,8 @@ Wikimedia Commons files, downloaded with CommonsFlow.
 - **Downloaded:** {{downloaded}} of {{listed}}{{#if listing_unfinished}} listed so far{{/if}}{{#if has_failed}}, {{failed_count}} failed{{/if}}
 - **Started / updated:** {{started}} / {{updated}}
 - **Source:** <{{source_url}}>
-{{#if has_subcategories}}- **Subcategories ({{subcategory_count}}):**
+{{#if root_excluded}}- **Top category's own files:** not included (only the subcategories below)
+{{/if}}{{#if has_subcategories}}- **Subcategories ({{subcategory_count}}):**
 {{subcategory_list}}
 {{/if}}
 ## Layout
@@ -48,7 +49,7 @@ This folder (`{{folder}}`) holds everything for this download:
 Public [Action API](https://www.mediawiki.org/wiki/API:Main_page), `format=json&formatversion=2`:
 
 ```
-# 1. list files (repeat with the returned continue.cmcontinue)
+# 1. list files (repeat with the returned continue.cmcontinue; same call for each included category)
 {{api_url}}?action=query&list=categorymembers&cmtitle={{category_param}}&cmtype=file&cmsort=sortkey&cmlimit={{page_size}}[&cmcontinue=<token>]
 
 # 2. metadata, up to {{batch_size}} page ids per call (extmetadata limited to the keys listed)

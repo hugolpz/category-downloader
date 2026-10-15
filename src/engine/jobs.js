@@ -3,10 +3,15 @@ import { folderName } from './paths';
 
 export const limitsFor = (botSpeed) => (botSpeed ? { pageSize: 5000, imageinfoBatch: 500 } : { pageSize: 500, imageinfoBatch: 50 });
 
-export async function createJob(root, form, dir, approxTotal, botSpeed) {
+/**
+ * @param {string} root the top category ("Category:Foo"): names the page and the folder
+ * @param {string[]} categories what to list and download. Includes `root` only if its own files are wanted
+ */
+export async function createJob(root, categories, form, dir, approxTotal, botSpeed) {
   const job = {
     id: `${Date.now()}`,
-    categories: [root, ...form.subcats],
+    root,
+    categories,
     cursors: {},
     enumDone: false,
     ...limitsFor(botSpeed),
