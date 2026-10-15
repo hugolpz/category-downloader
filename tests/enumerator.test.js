@@ -51,7 +51,7 @@ const mkJob = (id) => ({
   enumDone: false,
   pageSize: 10,
   imageinfoBatch: 5,
-  options: { sidecars: false, delayMs: 0, concurrency: 3 },
+  options: { delayMs: 0, concurrency: 3 },
   approxTotal: TOTAL,
   enumerated: 0,
   pageCount: 0,

@@ -13,8 +13,8 @@ It runs in the browser: files go directly from Wikimedia to your disk, nothing i
 - Pick a category, optionally with its level-1 subcategories (with file counts).
 - Streams every file to disk with a small concurrency pool and a polite delay; retries with backoff, honours `Retry-After`.
 - Crash-safe resume: progress is saved in IndexedDB, files are committed atomically (no half-written files).
-- Metadata saved as NDJSON (and optionally one `.json` next to each file), plus a generated `README.md` in every download folder.
-- Prefill the form from the URL and share the link: `?category=…&subcats=A|B&sidecars=1`.
+- Metadata saved as NDJSON, plus a `.json` next to every file (always on): contributors must be credited via backlink, user's name and license, and the `.json` holds all three. A generated `README.md` goes in every download folder.
+- Prefill the form from the URL and share the link: `?category=…&subcats=A|B`.
 - Shows whether your account has "bot speed" (high API limits) and adapts.
 
 ## Quick start

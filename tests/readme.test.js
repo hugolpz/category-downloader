@@ -29,14 +29,8 @@ describe('README', () => {
     expect(t).toContain(
       'iiprop=url|size|sha1|user|extmetadata&iiextmetadatafilter=DateTime|DateTimeOriginal|LicenseShortName|AttributionRequired|LicenseUrl|License\n',
     );
-    const withSidecars = buildReadme({
-      job: { ...job, options: { ...job.options, sidecars: true } },
-      phase: 'done',
-      counts: { done: 1, failed: 0, pending: 0 },
-      failed: [],
-      now: new Date(0),
-    });
-    expect(withSidecars).toContain('iiextmetadatafilter=');
+    expect(t).toContain('**Contributors must be credited**');
+    expect(t).toContain('Each file has a `<file>.json` beside it');
   });
   it('lists failures and explains how to resume when not done', () => {
     const t = buildReadme({
@@ -61,21 +55,21 @@ describe('README', () => {
     expect(text).toContain('1 failed');
   });
   it('leaves no unfilled placeholder or tag for any combination of options', () => {
-    for (const sidecars of [true, false])
-      for (const phase of ['running', 'done', 'stopped'])
-        for (const failed of [0, 150])
-          for (const enumDone of [true, false]) {
-            const j = { ...job, enumDone, options: { ...job.options, sidecars } };
-            const t = buildReadme({
-              job: j,
-              phase,
-              counts: { done: 5, failed, pending: 2 },
-              failed: Array.from({ length: Math.min(failed, 100) }, (_, i) => ({ title: `File:f${i}.wav`, lastError: 'HTTP 404' })),
-              now: new Date(0),
-            });
-            expect(t).not.toMatch(/\{\{|\}\}|<!--/);
-            expect(t).not.toMatch(/\n{3,}/);
-          }
+    for (const phase of ['running', 'done', 'stopped']) {
+      for (const failed of [0, 150]) {
+        for (const enumDone of [true, false]) {
+          const t = buildReadme({
+            job: { ...job, enumDone },
+            phase,
+            counts: { done: 5, failed, pending: 2 },
+            failed: Array.from({ length: Math.min(failed, 100) }, (_, i) => ({ title: `File:f${i}.wav`, lastError: 'HTTP 404' })),
+            now: new Date(0),
+          });
+          expect(t).not.toMatch(/\{\{|\}\}|<!--/);
+          expect(t).not.toMatch(/\n{3,}/);
+        }
+      }
+    }
   });
   it('template engine: if/else, unknown names stay visible', () => {
     expect(renderTemplate('a {{#if x}}YES{{else}}NO{{/if}} {{who}} {{typo}}', { who: 'me' }, { x: false })).toBe('a NO me {{typo}}\n');

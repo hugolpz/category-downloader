@@ -9,7 +9,7 @@
   Values:  name, status, downloaded, listed, failed_count, started, updated,
            source_url, folder, page_size, batch_size, iiprop, extmetadata_filter, category_param, api_url,
            subcategory_count, subcategory_list, failed_list
-  Flags:   sidecars, has_subcategories, has_failed, listing_unfinished, not_done
+  Flags:   has_subcategories, has_failed, listing_unfinished, not_done
 
   This comment is removed from the generated file.
 -->
@@ -40,8 +40,8 @@ This folder (`{{folder}}`) holds everything for this download:
 ```
 
 - File names are the Commons titles without `File:`. Unsafe characters become `_`, and an altered name gets `~<pageid>` before the extension.
-{{#if sidecars}}- Each file has a `<file>.json` beside it with the same record as its metadata line.
-{{/if}}- `metadata/*.ndjson` lines: `pageid`, `title`, `url` (download), `descriptionurl`, `descriptionshorturl` (file page), `size`, `sha1`, `user` (uploader) and `extmetadata` (`DateTime`, `DateTimeOriginal`, `License`, `LicenseShortName`, `LicenseUrl`, `AttributionRequired`).
+- Each file has a `<file>.json` beside it with the same record as its metadata line.
+- `metadata/*.ndjson` lines: `pageid`, `title`, `url` (download), `descriptionurl`, `descriptionshorturl` (file page), `size`, `sha1`, `user` (uploader) and `extmetadata` (`DateTime`, `DateTimeOriginal`, `License`, `LicenseShortName`, `LicenseUrl`, `AttributionRequired`).
 
 ## API calls
 
@@ -59,7 +59,9 @@ Public [Action API](https://www.mediawiki.org/wiki/API:Main_page), `format=json&
 
 ## Licensing
 
-Each file has its own license; check its Commons page before reuse (`https://commons.wikimedia.org/?curid=<pageid>`); its license is also in each metadata line (`extmetadata`).
+Each file has its own license; check its Commons page before reuse (`https://commons.wikimedia.org/?curid=<pageid>`).
+
+**Contributors must be credited** with a backlink, the user's name and the license. For each file, the `.json` next to it and its metadata line give you all three: `descriptionurl` (backlink to the file page), `user` (uploader) and `extmetadata` (`LicenseShortName`, `LicenseUrl`, `AttributionRequired`).
 {{#if has_failed}}
 ## Failed files
 

@@ -10,7 +10,7 @@ export async function createJob(root, form, dir, approxTotal, botSpeed) {
     cursors: {},
     enumDone: false,
     ...limitsFor(botSpeed),
-    options: { sidecars: form.sidecars, delayMs: form.delayMs, concurrency: form.concurrency },
+    options: { delayMs: form.delayMs, concurrency: form.concurrency },
     approxTotal,
     enumerated: 0,
     pageCount: 0,

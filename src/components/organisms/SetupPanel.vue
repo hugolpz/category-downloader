@@ -150,13 +150,20 @@ async function copyLink() {
         <span v-if="!setup.rootInfo" id="check-category-hint" class="muted text-sm">Check a category first.</span>
       </div>
 
+      <!-- Locked on purpose: contributors must be credited via backlink, user's name and license.
+           The per-file .json carries exactly those (descriptionurl, user, license), so it is never optional. -->
+      <div id="credits-note" class="mt-5 rounded-lg px-4 py-3" style="background: var(--forest-tint)">
+        <CdxCheckbox id="sidecars-checkbox" :model-value="true" disabled>
+          Save <code>.json</code> metadata file next to each download
+          <span class="muted block text-sm">
+            Always on. Contributors must be credited via backlink, user's name and license: each <code>.json</code> holds all three.
+          </span>
+        </CdxCheckbox>
+      </div>
+
       <details id="advanced-options" class="mt-5">
         <summary class="muted cursor-pointer text-sm font-medium">Advanced options</summary>
         <div class="mt-3 flex flex-col gap-4">
-          <CdxCheckbox id="sidecars-checkbox" v-model="setup.form.sidecars">
-            Save <code>.json</code> metadata file next to each download
-            <span class="muted block text-sm">Same record as the metadata line: links, uploader, license and dates.</span>
-          </CdxCheckbox>
           <div class="flex flex-wrap gap-6">
             <label class="flex flex-col gap-1 text-sm font-medium">
               Pause between files (ms)

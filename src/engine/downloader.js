@@ -139,9 +139,9 @@ export async function runDownloads(db, jobId, deps, opts = {}) {
     for (let attempt = 0; ; attempt++) {
       try {
         await downloadOne(item, deps, signal);
-        if (job.options.sidecars) {
-          await deps.sink.writeText(sidecarPath(item), JSON.stringify(itemRecord(item), null, 2));
-        }
+        // Always written (not optional): contributors must be credited via backlink, user's name and license,
+        // and this record carries exactly those (descriptionurl, user, extmetadata.License*).
+        await deps.sink.writeText(sidecarPath(item), JSON.stringify(itemRecord(item), null, 2));
         await finish(item, { done: slim(item, attempt) });
         return;
       } catch (e) {

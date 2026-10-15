@@ -45,7 +45,7 @@ async function run() {
     enumDone: true,
     pageSize: 500,
     imageinfoBatch: 50,
-    options: { sidecars: false, delayMs: 0, concurrency: 4 },
+    options: { delayMs: 0, concurrency: 4 },
     approxTotal: N,
     enumerated: N,
     pageCount: 0,

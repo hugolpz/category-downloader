@@ -6,7 +6,6 @@ describe('urlParams', () => {
     const p = {
       category: 'Lingua Libre pronunciation-fra',
       subcats: ['Category:A b', 'Category:C'],
-      sidecars: true,
       delayMs: 500,
       concurrency: 4,
     };

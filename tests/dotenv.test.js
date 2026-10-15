@@ -6,7 +6,9 @@ import { loadDotEnv, parseDotEnv } from '../server/dotenv.mjs';
 
 describe('parseDotEnv', () => {
   it('parses plain, quoted, exported and commented lines', () => {
-    const env = parseDotEnv(['# comment', '', 'A=1', 'B = two ', 'export C="three words"', "D='four'", 'E=five # trailing', 'F=a=b', 'bad line'].join('\n'));
+    const env = parseDotEnv(
+      ['# comment', '', 'A=1', 'B = two ', 'export C="three words"', "D='four'", 'E=five # trailing', 'F=a=b', 'bad line'].join('\n'),
+    );
     expect(env).toEqual({ A: '1', B: 'two', C: 'three words', D: 'four', E: 'five', F: 'a=b' });
   });
   it('handles Windows line endings', () => {

@@ -58,7 +58,6 @@ export function buildReadme({ job, phase, counts, failed, now }) {
     failed_list: failedLines.join('\n'),
   };
   const flags = {
-    sidecars: job.options.sidecars,
     has_subcategories: subs.length > 0,
     has_failed: counts.failed > 0,
     listing_unfinished: !job.enumDone,

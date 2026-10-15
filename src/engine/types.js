@@ -49,7 +49,6 @@
 
 /**
  * @typedef {object} JobOptions
- * @property {boolean} sidecars
  * @property {number} delayMs
  * @property {number} concurrency
  */

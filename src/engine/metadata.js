@@ -1,6 +1,6 @@
 import { metadataShardPath } from './paths';
 
-/** The metadata we keep for a file: shared by the NDJSON shards and the per-file sidecars. */
+/** The metadata we keep for a file: shared by the NDJSON shards and the per-file .json (the credit data: backlink, user, license). */
 export const itemRecord = (i) => ({
   pageid: i.pageid,
   title: i.title,

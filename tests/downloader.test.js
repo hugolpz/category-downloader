@@ -35,7 +35,7 @@ describe('downloads', () => {
   });
 
   it('keeps a rolling log of the last 20 finished names', async () => {
-    await seed(30, mkJob({ options: { sidecars: false, delayMs: 0, concurrency: 1 } }));
+    await seed(30, mkJob({ options: { delayMs: 0, concurrency: 1 } }));
     const { sink } = memorySink();
     await runDownloads(db, 'j', { sink, fetchFn: asFetch(async () => ok()), sleep: noSleep });
     const c = await counters();
@@ -115,7 +115,7 @@ describe('downloads', () => {
   });
 
   it('lowWater never passes an unfinished item, even when later items finish first', async () => {
-    await seed(4, mkJob({ options: { sidecars: false, delayMs: 0, concurrency: 2 } }));
+    await seed(4, mkJob({ options: { delayMs: 0, concurrency: 2 } }));
     const { sink } = memorySink();
     const ac = new AbortController();
     // Item 0 hangs until aborted; items 1-3 finish. Abort once those are done.
@@ -149,15 +149,20 @@ describe('downloads', () => {
     expect(await db.failures.count()).toBe(0);
   });
 
-  it('writes sidecars when enabled', async () => {
-    await seed(1, mkJob({ options: { sidecars: true, delayMs: 0, concurrency: 1 } }));
-    await db.items.update(['j', 0], { meta: { LicenseShortName: 'CC0', DateTime: '2026-01-01' } });
+  it('always writes a .json next to the file with the data needed to credit the contributor', async () => {
+    await seed(1);
+    await db.items.update(['j', 0], {
+      user: 'Yug',
+      meta: { LicenseShortName: 'CC0', LicenseUrl: 'https://c/cc0', DateTime: '2026-01-01' },
+    });
     const { sink, files } = memorySink();
     await runDownloads(db, 'j', { sink, fetchFn: asFetch(async () => ok()), sleep: noSleep });
+    // backlink (descriptionurl), the user's name and the license
     expect(JSON.parse(files.get('files/0000/LL-0.wav.json'))).toMatchObject({
       pageid: 100,
       descriptionurl: 'https://c/File:x',
-      extmetadata: { LicenseShortName: 'CC0', DateTime: '2026-01-01' },
+      user: 'Yug',
+      extmetadata: { LicenseShortName: 'CC0', LicenseUrl: 'https://c/cc0', DateTime: '2026-01-01' },
     });
   });
 });
