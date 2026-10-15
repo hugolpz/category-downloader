@@ -27,26 +27,24 @@ async function exportJson() {
 <template>
   <section class="card p-5" style="border-left: 4px solid var(--maize)">
     <div class="mb-3 flex flex-wrap items-center gap-3">
-      <h3 class="flex items-center gap-2 text-lg">
-        <CdxIcon :icon="cdxIconAlert" style="color: var(--maize)" />{{ count.toLocaleString() }} file{{
-          count === 1 ? ' needs' : 's need'
-        }}
+      <h3 id="failed-title" class="flex items-center gap-2 text-lg">
+        <CdxIcon :icon="cdxIconAlert" style="color: var(--maize)" />{{ count.toLocaleString() }} file{{ count === 1 ? ' needs' : 's need' }}
         another try
       </h3>
       <span class="flex-1" />
-      <CdxButton size="small" action="progressive" weight="primary" @click="emit('retry')"
+      <CdxButton id="retry-failed-button" size="small" action="progressive" weight="primary" @click="emit('retry')"
         ><CdxIcon :icon="cdxIconReload" size="small" /> Retry all</CdxButton
       >
-      <CdxButton size="small" @click="exportJson">Export errors.json</CdxButton>
+      <CdxButton id="export-errors-button" size="small" @click="exportJson">Export errors.json</CdxButton>
     </div>
-    <ul class="m-0 list-none p-0 font-mono text-xs leading-6">
+    <ul id="failed-files" class="m-0 list-none p-0 font-mono text-xs leading-6">
       <li v-for="r in rows" :key="r.pageid" class="truncate" :title="r.lastError">
         {{ r.title.replace(/^File:/, '') }} <span class="muted">— {{ r.lastError }}</span>
       </li>
     </ul>
     <div v-if="count > PAGE" class="mt-3 flex gap-2">
-      <CdxButton size="small" :disabled="offset === 0" @click="offset -= PAGE">Previous</CdxButton>
-      <CdxButton size="small" :disabled="offset + PAGE >= count" @click="offset += PAGE">Next</CdxButton>
+      <CdxButton id="failed-previous-button" size="small" :disabled="offset === 0" @click="offset -= PAGE">Previous</CdxButton>
+      <CdxButton id="failed-next-button" size="small" :disabled="offset + PAGE >= count" @click="offset += PAGE">Next</CdxButton>
     </div>
   </section>
 </template>

@@ -43,31 +43,43 @@ const tiles = computed(() =>
   celebrate.value
     ? [
         {
+          id: 'stat-files-saved',
           label: 'Files saved',
           value: p.counts.done.toLocaleString(),
           hint: p.counts.failed ? `${p.counts.failed.toLocaleString()} to retry` : 'No failures',
           tone: 'good',
         },
-        { label: 'Average speed', value: formatRate(p.summary.perSecond) },
-        { label: timeLabel.value, value: formatDuration(p.summary.elapsedMs) },
-        { label: 'Saved in', value: folder.value, hint: 'inside the folder you picked' },
+        { id: 'stat-average-speed', label: 'Average speed', value: formatRate(p.summary.perSecond) },
+        { id: 'stat-time-taken', label: timeLabel.value, value: formatDuration(p.summary.elapsedMs) },
+        { id: 'stat-folder', label: 'Saved in', value: folder.value, hint: 'inside the folder you picked' },
       ]
     : [
-        { label: 'Saved so far', value: p.counts.done.toLocaleString(), hint: `of ~${p.total.toLocaleString()}`, tone: 'good' },
+        {
+          id: 'stat-saved-so-far',
+          label: 'Saved so far',
+          value: p.counts.done.toLocaleString(),
+          hint: `of ~${p.total.toLocaleString()}`,
+          tone: 'good',
+        },
         running.value
-          ? { label: 'Speed', value: formatRate(p.perSecond) }
-          : { label: 'Session average', value: formatRate(p.summary.perSecond) },
-        { label: 'Time left', value: eta.value },
-        { label: 'Waiting', value: p.counts.pending.toLocaleString() },
+          ? { id: 'stat-speed', label: 'Speed', value: formatRate(p.perSecond) }
+          : { id: 'stat-session-average', label: 'Session average', value: formatRate(p.summary.perSecond) },
+        { id: 'stat-time-left', label: 'Time left', value: eta.value },
+        { id: 'stat-waiting', label: 'Waiting', value: p.counts.pending.toLocaleString() },
       ],
 );
 </script>
 
 <template>
-  <section class="flex flex-col gap-6">
-    <div class="card overflow-hidden">
+  <section id="progress-panel" class="flex flex-col gap-6">
+    <div id="progress-summary-card" class="card overflow-hidden">
       <!-- celebration banner -->
-      <div v-if="celebrate" class="flex items-center gap-4 px-6 py-5" style="background: var(--surface-hero); color: var(--ink-on-dark)">
+      <div
+        v-if="celebrate"
+        id="finish-banner"
+        class="flex items-center gap-4 px-6 py-5"
+        style="background: var(--surface-hero); color: var(--ink-on-dark)"
+      >
         <span
           class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
           style="background: var(--maize); color: var(--surface-footer)"
@@ -75,8 +87,8 @@ const tiles = computed(() =>
           <CdxIcon :icon="cdxIconSuccess" />
         </span>
         <div class="min-w-0">
-          <h2 class="text-2xl" style="color: var(--ink-on-dark)">{{ title }}</h2>
-          <p style="color: var(--ink-on-dark-muted)">
+          <h2 id="progress-title" class="text-2xl" style="color: var(--ink-on-dark)">{{ title }}</h2>
+          <p id="finish-summary" style="color: var(--ink-on-dark-muted)">
             <strong class="num" style="color: var(--ink-on-dark)">{{ p.counts.done.toLocaleString() }}</strong> files saved to
             <strong style="color: var(--ink-on-dark)">{{ folder }}</strong> in {{ formatDuration(p.summary.elapsedMs) }}.
             <template v-if="p.counts.failed">{{ p.counts.failed.toLocaleString() }} just need another try.</template>
@@ -85,13 +97,14 @@ const tiles = computed(() =>
       </div>
 
       <div class="p-6">
-        <header v-if="!celebrate" class="mb-1 flex flex-wrap items-center gap-3">
-          <h2 class="text-2xl">{{ title }}</h2>
-          <CdxProgressIndicator v-if="running || stopping">{{ title }}</CdxProgressIndicator>
+        <header v-if="!celebrate" id="progress-header" class="mb-1 flex flex-wrap items-center gap-3">
+          <h2 id="progress-title" class="text-2xl">{{ title }}</h2>
+          <CdxProgressIndicator v-if="running || stopping" id="progress-spinner">{{ title }}</CdxProgressIndicator>
           <span class="flex-1" />
-          <CdxButton v-if="running" @click="job.stop()"><CdxIcon :icon="cdxIconPause" size="small" /> Pause</CdxButton>
+          <CdxButton v-if="running" id="pause-button" @click="job.stop()"><CdxIcon :icon="cdxIconPause" size="small" /> Pause</CdxButton>
           <CdxButton
             v-else-if="job.unfinished"
+            id="progress-resume-button"
             action="progressive"
             weight="primary"
             :disabled="!auth.loggedIn"
@@ -100,22 +113,26 @@ const tiles = computed(() =>
             <CdxIcon :icon="cdxIconPlay" size="small" /> Resume
           </CdxButton>
         </header>
-        <div v-else-if="job.unfinished" class="mb-4">
-          <CdxButton action="progressive" weight="primary" :disabled="!auth.loggedIn" @click="job.resumeOrPick()">
+        <div v-else-if="job.unfinished" id="finished-resume" class="mb-4">
+          <CdxButton id="retry-rest-button" action="progressive" weight="primary" :disabled="!auth.loggedIn" @click="job.resumeOrPick()">
             <CdxIcon :icon="cdxIconPlay" size="small" /> Resume to retry the rest
           </CdxButton>
         </div>
 
-        <p v-if="stopping" class="muted mb-3 text-sm">
+        <p v-if="stopping" id="pausing-note" class="muted mb-3 text-sm">
           Finishing downloads in progress and writing the README. This can take a few seconds.
         </p>
-        <p v-else-if="job.unfinished && !auth.loggedIn" class="muted mb-3 text-sm">Log in to resume.</p>
-        <p v-if="job.resumeError" class="mb-3 text-sm" style="color: var(--terracotta)">{{ job.resumeError }}</p>
+        <p v-else-if="job.unfinished && !auth.loggedIn" id="login-to-resume-note" class="muted mb-3 text-sm">Log in to resume.</p>
+        <p v-if="job.resumeError" id="resume-error" class="mb-3 text-sm" style="color: var(--terracotta)">{{ job.resumeError }}</p>
 
-        <CdxMessage v-if="job.phase === 'paused-auth'" type="warning" :inline="false" class="mb-4">{{ job.message }}</CdxMessage>
-        <CdxMessage v-else-if="job.phase === 'error'" type="error" :inline="false" class="mb-4">{{ job.message }}</CdxMessage>
+        <CdxMessage v-if="job.phase === 'paused-auth'" id="login-expired-message" type="warning" :inline="false" class="mb-4">{{
+          job.message
+        }}</CdxMessage>
+        <CdxMessage v-else-if="job.phase === 'error'" id="engine-error-message" type="error" :inline="false" class="mb-4">{{
+          job.message
+        }}</CdxMessage>
 
-        <p v-if="!celebrate" class="mb-2 text-lg">
+        <p v-if="!celebrate" id="progress-counter" class="mb-2 text-lg">
           <strong class="num font-display text-3xl">{{ p.counts.done.toLocaleString() }}</strong>
           <span class="muted"> of ~{{ p.total.toLocaleString() }} files saved</span>
           <span v-if="!p.enumDone" class="muted text-sm"> · still listing ({{ p.enumerated.toLocaleString() }} found)</span>
@@ -123,22 +140,22 @@ const tiles = computed(() =>
             · {{ p.counts.failed.toLocaleString() }} to retry, see below</span
           >
         </p>
-        <ProgressBar :value="finished" :max="Math.max(p.total, 1)" label="Download progress" />
+        <ProgressBar id="progress-bar" :value="finished" :max="Math.max(p.total, 1)" label="Download progress" />
 
-        <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div id="stats-grid" class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile v-for="t in tiles" :key="t.label" v-bind="t" />
         </div>
       </div>
     </div>
 
-    <RollingLog :recent="p.recent" :upcoming="p.upcoming" />
-    <FailedList v-if="p.counts.failed" :count="p.counts.failed" @retry="job.requeueFailed()" />
+    <RollingLog id="rolling-log" :recent="p.recent" :upcoming="p.upcoming" />
+    <FailedList v-if="p.counts.failed" id="failed-list" :count="p.counts.failed" @retry="job.requeueFailed()" />
 
-    <details v-if="job.readme" class="card p-5">
+    <details v-if="job.readme" id="readme-viewer" class="card p-5">
       <summary class="cursor-pointer font-display text-lg font-semibold">
         README.md <span class="muted font-body text-sm font-normal">— saved in the download folder</span>
       </summary>
-      <pre class="mb-0 mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed">{{ job.readme }}</pre>
+      <pre id="readme-content" class="mb-0 mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed">{{ job.readme }}</pre>
     </details>
   </section>
 </template>

@@ -9,20 +9,22 @@ const auth = useAuthStore();
 </script>
 
 <template>
-  <header class="border-b border-line bg-paper">
+  <header id="app-header" class="border-b border-line bg-paper">
     <div class="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-8">
-      <a href="./" class="flex items-center gap-2.5 no-underline" style="color: var(--ink)">
+      <a id="brand-link" href="./" class="flex items-center gap-2.5 no-underline" style="color: var(--ink)">
         <BrandMark />
         <span class="font-display text-xl font-bold leading-none">CommonsFlow</span>
       </a>
-      <span class="eyebrow hidden lg:inline">Bulk download from Wikimedia Commons</span>
+      <span id="app-tagline" class="eyebrow hidden lg:inline">Bulk download from Wikimedia Commons</span>
       <span class="flex-1" />
-      <BotSpeedBadge :state="auth.botSpeed" />
+      <BotSpeedBadge id="bot-speed-badge" :state="auth.botSpeed" />
       <template v-if="auth.loggedIn">
-        <span class="hidden text-sm font-medium sm:inline">{{ auth.userName }}</span>
-        <CdxButton weight="quiet" aria-label="Log out" title="Log out" @click="auth.logout()"><CdxIcon :icon="cdxIconLogOut" /></CdxButton>
+        <span id="user-name" class="hidden text-sm font-medium sm:inline">{{ auth.userName }}</span>
+        <CdxButton id="logout-button" weight="quiet" aria-label="Log out" title="Log out" @click="auth.logout()"
+          ><CdxIcon :icon="cdxIconLogOut"
+        /></CdxButton>
       </template>
-      <CdxButton v-else action="progressive" weight="primary" @click="auth.login()">
+      <CdxButton v-else id="login-button" action="progressive" weight="primary" @click="auth.login()">
         <CdxIcon :icon="cdxIconLogIn" size="small" /> Log in
       </CdxButton>
     </div>

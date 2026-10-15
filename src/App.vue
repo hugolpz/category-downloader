@@ -37,13 +37,13 @@ async function start() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col">
+  <div id="app-shell" class="flex min-h-dvh flex-col">
     <AppHeader />
-    <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-8">
-      <CdxMessage v-if="!supported" type="warning" :inline="false">
+    <main id="main-content" class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-8">
+      <CdxMessage v-if="!supported" id="browser-support-warning" type="warning" :inline="false">
         This browser cannot save into a chosen folder. Please use Chrome, Edge or another Chromium-based browser.
       </CdxMessage>
-      <CdxMessage v-if="auth.error" type="error" :inline="false">{{ auth.error }}</CdxMessage>
+      <CdxMessage v-if="auth.error" id="app-error" type="error" :inline="false">{{ auth.error }}</CdxMessage>
 
       <HeroIntro v-if="!auth.loggedIn" />
       <template v-else>

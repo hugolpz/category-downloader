@@ -82,6 +82,22 @@ tests/                  Vitest unit tests (fake IndexedDB, in-memory file sink)
 
 The README that is written into each download folder comes from [src/engine/readme.template.md](src/engine/readme.template.md): plain Markdown, easy to edit.
 
+## UI element ids
+
+Every meaningful element has a stable, human-readable `id` (about 75 of them) for styling hooks, anchors and end-to-end tests.
+Convention: lowercase kebab-case, `<area>-<element>[-<kind>]`, unique on the page.
+
+| Area | Examples |
+|---|---|
+| Header / footer | `app-header`, `brand-link`, `bot-speed-badge`, `login-button`, `logout-button`, `user-name`, `app-footer`, `author-link` |
+| Welcome page | `hero-intro`, `hero-title`, `hero-login-button`, `hero-steps`, `hero-step-1` |
+| Setup | `category-input`, `category-check-button`, `category-summary`, `include-subcategories-checkbox`, `subcategory-list`, `subcategory-option-0`, `start-button`, `share-link-button`, `sidecars-checkbox`, `delay-input`, `concurrency-input` |
+| Resume | `resume-prompt`, `resume-prompt-resume-button`, `resume-prompt-discard-button` |
+| Progress | `progress-panel`, `progress-title`, `progress-counter`, `progress-bar`, `pause-button`, `progress-resume-button`, `finish-banner`, `stats-grid`, `stat-speed`, `stat-time-left`, `rolling-log`, `recent-log`, `upcoming-log`, `readme-viewer` |
+| Failures | `failed-list`, `retry-failed-button`, `export-errors-button` |
+
+When you add an element worth targeting, follow the same pattern. Repeated elements get an index suffix (`subcategory-option-3`).
+
 ## Contributing
 
 It is plain JavaScript (no TypeScript, no build step for types). Data shapes are documented with JSDoc in `src/engine/types.js`. Before opening a pull request, please run `npm test` and `npm run lint`. The most valuable tests are the ones around resume and failure, in `tests/downloader.test.js` and `tests/enumerator.test.js`.
