@@ -23,8 +23,8 @@ nano .env                  # OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIREC
 chmod 600 .env             # only you can read the secret
 
 toolforge webservice --help           # pick a Node type >= 20 (e.g. node20)
-toolforge webservice node20 shell     # a shell inside the Node runtime: build there
-  npm install && npm run build && exit
+toolforge webservice node20 shell     # a shell inside the Node runtime (it starts in ~, so cd first)
+  cd ~/www/js && npm install && npm run build && exit
 
 toolforge webservice node20 start
 toolforge webservice node20 logs      # if it does not come up
@@ -37,7 +37,7 @@ variables (if you also set some with `toolforge envvars`) take priority over the
 ```bash
 cd ~/www/js && git pull
 toolforge webservice node20 shell     # then, inside it:
-  npm install && npm run build && exit
+  cd ~/www/js && npm install && npm run build && exit
 toolforge webservice node20 restart
 ```
 Edit `.env`? Just `toolforge webservice node20 restart` afterwards.
