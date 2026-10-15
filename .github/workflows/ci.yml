@@ -69,6 +69,11 @@ jobs:
           grep -q '"clientId":"ci-client-id"' <<<"$config"
           if grep -q 'ci-client-secret' <<<"$config"; then echo "secret leaked in /auth/config"; exit 1; fi
           grep -q '<div id="app">' <<<"$page"
+          # Without DEPLOY_SECRET the deploy endpoint must not exist, and no POST may be answered with the home page.
+          code="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8787/deploy)"
+          [ "$code" = "404" ] || { echo "POST /deploy answered $code, expected 404"; exit 1; }
+          code="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8787/no-such-path)"
+          [ "$code" = "405" ] || { echo "POST /no-such-path answered $code, expected 405"; exit 1; }
 
   # Continuous deployment: only after every check above passed, only for pushes to main.
   # No SSH key or Toolforge password is involved: the job uploads the built app to the running
@@ -109,11 +114,17 @@ jobs:
           ts="$(( $(date +%s) * 1000 ))"
           # HMAC-SHA256 over "<timestamp>." followed by the file bytes; the server recomputes and compares.
           sig="$({ printf '%s.' "$ts"; cat release.tgz; } | openssl dgst -sha256 -hmac "$DEPLOY_SECRET" -r | cut -d' ' -f1)"
-          curl -fsS --max-time 120 -X POST "$DEPLOY_URL/deploy" \
+          response="$(curl -fsS --max-time 120 -X POST "$DEPLOY_URL/deploy" \
             -H "X-Deploy-Timestamp: $ts" \
             -H "X-Deploy-Signature: sha256=$sig" \
             -H "Content-Type: application/gzip" \
-            --data-binary @release.tgz
+            --data-binary @release.tgz)"
+          echo "Server answered: ${response:0:200}"
+          # A 200 alone is not proof: an old server would answer with the home page. Require the install confirmation.
+          if ! grep -qF '"ok":true' <<<"$response"; then
+            echo "The server did not confirm the install. Is the new server code running and DEPLOY_SECRET set in .env?" >&2
+            exit 1
+          fi
 
       # The server restarts itself after installing; wait until it reports this exact commit.
       - name: Wait for the new version
