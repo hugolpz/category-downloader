@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { CdxButton, CdxCheckbox, CdxIcon, CdxLookup, CdxMessage } from '@wikimedia/codex';
 import { cdxIconCheck, cdxIconFolderPlaceholder, cdxIconLink, cdxIconSearch } from '@wikimedia/codex-icons';
 import { useAuthStore } from '../../stores/auth';
+import { useJobStore } from '../../stores/job';
 import { useSetupStore } from '../../stores/setup';
 import { suggestCategories, toMenuItem } from '../../api/suggestions';
 import { useCategorySuggestions } from '../../composables/useCategorySuggestions';
@@ -11,6 +12,8 @@ import { EXAMPLE_CATEGORIES } from '../../utils/exampleCategories';
 
 const auth = useAuthStore();
 const setup = useSetupStore();
+const job = useJobStore();
+const running = computed(() => job.phase === 'running' || job.phase === 'stopping');
 const copied = ref(false);
 
 // The field shows a different real category every 3 s; Tab on an empty field fills it in.
@@ -44,7 +47,7 @@ function onPick(value) {
 // Check the category once logged in (covers URL prefill).
 watch(
   () => auth.loggedIn,
-  (ok) => ok && setup.form.category && setup.check(),
+  (ok) => ok && setup.form.category && !setup.rootInfo && setup.check(),
   { immediate: true },
 );
 
@@ -182,7 +185,7 @@ async function copyLink() {
           action="progressive"
           weight="primary"
           size="large"
-          :disabled="!auth.loggedIn || !setup.rootInfo"
+          :disabled="!auth.loggedIn || !setup.rootInfo || running"
           @click="emit('start')"
         >
           <CdxIcon :icon="cdxIconFolderPlaceholder" size="small" /> Choose folder &amp; start
@@ -190,7 +193,8 @@ async function copyLink() {
         <CdxButton id="share-link-button" :disabled="!setup.form.category" @click="copyLink">
           <CdxIcon :icon="copied ? cdxIconCheck : cdxIconLink" size="small" /> {{ copied ? 'Link copied' : 'Copy share link' }}
         </CdxButton>
-        <span v-if="!setup.rootInfo" id="check-category-hint" class="muted text-sm">Check a category first.</span>
+        <span v-if="running" id="running-note" class="muted text-sm">A download is running (step 3). You can prepare the next one.</span>
+        <span v-else-if="!setup.rootInfo" id="check-category-hint" class="muted text-sm">Check a category first.</span>
       </div>
 
       <!-- Locked on purpose: contributors must be credited via backlink, user's name and license.

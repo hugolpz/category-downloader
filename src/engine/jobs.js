@@ -28,13 +28,22 @@ export async function applyLimits(jobId, botSpeed) {
   await db.jobs.update(jobId, limitsFor(botSpeed));
 }
 
+/** A job has work left if listing is unfinished or listed files are not yet done/failed. */
+async function hasWork(job) {
+  const c = await db.counters.get(job.id);
+  return !job.enumDone || job.enumerated - (c?.done ?? 0) - (c?.failed ?? 0) > 0;
+}
+
+/** The job with this id if it still has work, else undefined. */
+export async function getUnfinishedJob(id) {
+  const job = await db.jobs.get(id);
+  return job && (await hasWork(job)) ? job : undefined;
+}
+
 /** Most recent job that still has work: more to list, or listed files not yet finished. */
 export async function findUnfinishedJob() {
   const jobs = await db.jobs.orderBy('id').reverse().toArray();
-  for (const j of jobs) {
-    const c = await db.counters.get(j.id);
-    if (!j.enumDone || j.enumerated - (c?.done ?? 0) - (c?.failed ?? 0) > 0) return j;
-  }
+  for (const j of jobs) if (await hasWork(j)) return j;
   return undefined;
 }
 

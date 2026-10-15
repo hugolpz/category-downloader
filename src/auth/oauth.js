@@ -42,24 +42,32 @@ export async function login() {
   location.assign(url.toString());
 }
 
-/** Call on app start: finishes the redirect if `?code=` is present. Returns true if a login was completed. */
-export async function handleRedirect() {
-  const params = new URLSearchParams(location.search);
+/** True while a login we started is waiting for its redirect back (the PKCE verifier is kept in sessionStorage). */
+export const hasPendingLogin = () => !!sessionStorage.getItem(VERIFIER_KEY);
+
+/**
+ * Finish the redirect from Wikimedia: check `state`, exchange the code (on our server) for tokens.
+ * Returns the page the user was on before logging in (path + query), or null if `search` holds no code.
+ * The caller (the router guard) navigates there; this function never touches the address bar.
+ *
+ * @param {string} [search] query string of the callback URL
+ * @returns {Promise<string | null>}
+ */
+export async function handleRedirect(search = location.search) {
+  const params = new URLSearchParams(search);
   const code = params.get('code');
-  if (!code) return false;
+  if (!code) return null;
   const verifier = sessionStorage.getItem(VERIFIER_KEY);
   const expectedState = sessionStorage.getItem(STATE_KEY);
   const returnTo = sessionStorage.getItem('cf.returnTo') ?? '/';
   sessionStorage.removeItem(VERIFIER_KEY);
   sessionStorage.removeItem(STATE_KEY);
   sessionStorage.removeItem('cf.returnTo');
-  // The callback path (e.g. /oauth/wikimedia/success) is not a real page: go back to where the user was.
-  history.replaceState(null, '', returnTo);
   if (!verifier || params.get('state') !== expectedState) throw new Error('OAuth state mismatch');
 
   const token = await postAuth('/auth/token', { code, code_verifier: verifier });
   if (!token) throw new Error('Token exchange failed');
-  return true;
+  return returnTo;
 }
 
 async function postAuth(path, body) {

@@ -99,6 +99,9 @@ const tiles = computed(() =>
       </div>
 
       <div class="p-6">
+        <p v-if="job.category" id="progress-category" class="eyebrow mb-1 truncate" :title="job.category">
+          {{ job.category.replace(/_/g, ' ') }}
+        </p>
         <header v-if="!celebrate" id="progress-header" class="mb-1 flex flex-wrap items-center gap-3">
           <h2 id="progress-title" class="text-2xl">{{ title }}</h2>
           <CdxProgressIndicator v-if="running || stopping" id="progress-spinner">{{ title }}</CdxProgressIndicator>
