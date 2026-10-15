@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# Folders you pick as download targets while testing
+downloads/
