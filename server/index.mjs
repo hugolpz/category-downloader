@@ -177,7 +177,13 @@ async function handleDeploy(req, res) {
 }
 
 async function serveStatic(req, res, path) {
-  const rel = normalize(decodeURIComponent(path)).replace(/^([/\\])+/, '');
+  let decoded;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    decoded = 'index.html'; // malformed escape such as /Category:100% : serve the app, whose router decides what to show
+  }
+  const rel = normalize(decoded).replace(/^([/\\])+/, '');
   let file = join(DIST, rel || 'index.html');
   if (!file.startsWith(DIST)) return json(res, 403, { error: 'forbidden' });
   const exists = await stat(file).then(

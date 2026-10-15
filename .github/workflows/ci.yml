@@ -69,6 +69,11 @@ jobs:
           grep -q '"clientId":"ci-client-id"' <<<"$config"
           if grep -q 'ci-client-secret' <<<"$config"; then echo "secret leaked in /auth/config"; exit 1; fi
           grep -q '<div id="app">' <<<"$page"
+          # Deep links: client-side routes must serve the app too (the router takes over in the browser).
+          for path in '/Category:Lingua_Libre_pronunciation-other_(Q36759)' '/Category:Foo/Bar' '/Category:100%25_pure' '/Category:100%'; do
+            deep="$(curl -fsS --path-as-is "http://localhost:8787$path")"
+            grep -q '<div id="app">' <<<"$deep" || { echo "deep link $path did not serve the app"; exit 1; }
+          done
           # Without DEPLOY_SECRET the deploy endpoint must not exist, and no POST may be answered with the home page.
           code="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8787/deploy)"
           [ "$code" = "404" ] || { echo "POST /deploy answered $code, expected 404"; exit 1; }
