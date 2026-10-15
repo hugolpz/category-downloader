@@ -4,6 +4,10 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDotEnv } from './dotenv.mjs';
+
+// Optional .env at the project root (visible and editable with nano on Toolforge). Real environment variables win.
+loadDotEnv(process.env.ENV_FILE ?? fileURLToPath(new URL('../.env', import.meta.url)));
 
 const PORT = Number(process.env.PORT ?? 8787);
 // VITE_* names are accepted so an existing dev .env keeps working.
