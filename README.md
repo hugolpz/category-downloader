@@ -49,7 +49,7 @@ Register a **confidential** OAuth 2.0 consumer on Meta: <https://meta.wikimedia.
 | `npm test` | Unit tests (Vitest) |
 | `npm run lint` / `npm run format` | ESLint / Prettier |
 
-Deployment: see [DEPLOY.md](DEPLOY.md).
+Deployment: see [DEPLOY.md](DEPLOY.md). Pushes to `main` that pass CI are deployed to Toolforge automatically (signed upload, no SSH keys).
 
 ## How it works
 

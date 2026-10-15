@@ -69,3 +69,62 @@ jobs:
           grep -q '"clientId":"ci-client-id"' <<<"$config"
           if grep -q 'ci-client-secret' <<<"$config"; then echo "secret leaked in /auth/config"; exit 1; fi
           grep -q '<div id="app">' <<<"$page"
+
+  # Continuous deployment: only after every check above passed, only for pushes to main.
+  # No SSH key or Toolforge password is involved: the job uploads the built app to the running
+  # service, signed with a shared secret (HMAC). See DEPLOY.md, "Automatic deploy from GitHub".
+  deploy:
+    name: Deploy to Toolforge
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'hugolpz/commons-flow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production # holds DEPLOY_SECRET and DEPLOY_URL; add required reviewers here if you want a manual gate
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false # never interrupt a deploy half way
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Package the release
+        run: |
+          printf '{"sha":"%s","builtAt":"%s"}\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/version.json
+          tar -czf release.tgz dist server
+          ls -l release.tgz
+
+      - name: Upload to Toolforge
+        env:
+          DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }} # https://commons-flow.toolforge.org
+        run: |
+          set -euo pipefail
+          ts="$(( $(date +%s) * 1000 ))"
+          # HMAC-SHA256 over "<timestamp>." followed by the file bytes; the server recomputes and compares.
+          sig="$({ printf '%s.' "$ts"; cat release.tgz; } | openssl dgst -sha256 -hmac "$DEPLOY_SECRET" -r | cut -d' ' -f1)"
+          curl -fsS --max-time 120 -X POST "$DEPLOY_URL/deploy" \
+            -H "X-Deploy-Timestamp: $ts" \
+            -H "X-Deploy-Signature: sha256=$sig" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @release.tgz
+
+      # The server restarts itself after installing; wait until it reports this exact commit.
+      - name: Wait for the new version
+        env:
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+        run: |
+          for i in $(seq 1 36); do
+            version="$(curl -fsS --max-time 10 "$DEPLOY_URL/version" 2>/dev/null || true)"
+            if grep -qF "$GITHUB_SHA" <<<"$version"; then echo "Live: $version"; exit 0; fi
+            echo "Waiting for $GITHUB_SHA (got: ${version:-no answer})"
+            sleep 5
+          done
+          echo "The new version did not come up within 3 minutes" >&2
+          exit 1

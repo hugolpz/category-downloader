@@ -33,9 +33,12 @@ toolforge webservice node20 logs      # if it does not come up
 `.env` is git-ignored, so `git pull` never touches it. The server loads it at start; real environment
 variables (if you also set some with `toolforge envvars`) take priority over the file.
 
-**Update:**
+**Update by hand** (only if you are not using the automatic deploy below; `npm` exists only inside the Node container, not on the login server):
 ```bash
-cd ~/www/js && git pull && npm install && npm run build && toolforge webservice node20 restart
+cd ~/www/js && git pull
+toolforge webservice node20 shell     # then, inside it:
+  npm install && npm run build && exit
+toolforge webservice node20 restart
 ```
 Edit `.env`? Just `toolforge webservice node20 restart` afterwards.
 
@@ -52,6 +55,38 @@ toolforge build show
 toolforge webservice buildservice start
 ```
 The buildpack runs `npm install` and `npm run build`, then the `Procfile` (`node server/index.mjs`).
+
+## Automatic deploy from GitHub (recommended once Option A works)
+
+Every push to `main` that passes CI deploys itself. There is **no SSH key and no Toolforge password**
+in GitHub: the workflow (`deploy` job in `.github/workflows/ci.yml`) builds the app, packs `dist/` and
+`server/` into a tarball and uploads it to your running service, signed with a shared secret (HMAC). The server
+checks the signature, validates the archive, swaps the files in, restarts and reports its version; the job waits
+until `/version` shows the new commit. Production needs no `git`, `npm` or `node_modules` for this.
+
+**One-time setup**
+
+1. Generate a secret: `openssl rand -hex 32`.
+2. On Toolforge, add it to `~/www/js/.env`:
+   ```
+   DEPLOY_SECRET=<the secret>
+   ```
+3. Put the deploy code on the server **once by hand** (the version running now does not have `/deploy` yet), using the
+   manual update above, then `toolforge webservice node20 restart`.
+4. On GitHub, Settings → Environments → New environment `production`. Add:
+   - secret `DEPLOY_SECRET` = the same value
+   - variable `DEPLOY_URL` = `https://commons-flow.toolforge.org` (no trailing slash)
+   - optional: "Required reviewers" if you want to approve each deploy.
+5. Push to `main`. Watch the run under the Actions tab.
+
+From then on, do not `git pull` in `~/www/js`: deploys overwrite `dist/` and `server/` there.
+`.env` is never touched, and the previous release is kept in `.deploy/prev/` for a manual rollback
+(`mv` the folders back and restart).
+
+**Safety:** without `DEPLOY_SECRET` the `/deploy` endpoint does not exist (404). Requests need a valid HMAC and a
+timestamp under 5 minutes old (no replay). The archive is listed before extraction and must contain only regular
+files under `dist/` and `server/` (no symlinks, absolute or `..` paths). One deploy runs at a time.
+To turn it off, empty `DEPLOY_SECRET` in `.env` and restart. To rotate the secret, change it in both places.
 
 ## Check
 Open <https://commons-flow.toolforge.org/auth/config>: it should show your client id and callback URL
