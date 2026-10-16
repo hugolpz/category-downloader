@@ -1,0 +1,37 @@
+{
+  "_schema": "/toolinfo/1.2.2",
+  "_language": "en",
+  "name": "toolforge-commons-flow",
+  "title": "Commons Flow Downloader",
+  "description": "Download 10,000s audio, image or video files from Categories, with their licenses, into a folder on your computer. Pause whenever you like, even close the tab: it picks up exactly where it stopped.",
+  "url": "https://commons-flow.toolforge.org/",
+  "author": [
+    {
+      "name": "Hugo Lopez",
+      "wiki_username": "Yug",
+      "developer_username": "hugolpz",
+      "url": "https://meta.wikimedia.org/wiki/User:Yug"
+    },
+    {
+      "name": "Yug",
+      "wiki_username": "Yug",
+      "developer_username": "hugolpz",
+      "url": "https://meta.wikimedia.org/wiki/User:Yug"
+    }
+  ],
+  "repository": "https://github.com/hugolpz/commons-flow",
+  "for_wikis": [
+    "*"
+  ],
+  "icon": "https://commons.wikimedia.org/wiki/File:CommonsFlow-icon.svg",
+  "license": "ISC",
+  "available_ui_languages": [
+    "en"
+  ],
+  "technology_used": [
+    "Toolforge"
+  ],
+  "tool_type": "web app",
+  "bugtracker_url": "https://github.com/hugolpz/commons-flow/issues",
+  "keywords": "bulk download, commons, commons categories, dataset, lingualibre"
+}
