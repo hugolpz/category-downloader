@@ -56,6 +56,9 @@ const selectedCount = computed(() => setup.form.cats?.length ?? 0);
 const allSelected = computed(() => selectedCount.value === setup.selectionRows.length);
 const toggleAll = () => (setup.form.cats = allSelected.value ? [] : setup.selectionRows.map((r) => r.title));
 
+const filterUsesTitle = computed(() => ['title', 'both'].includes(setup.form.filter.mode));
+const filterUsesDate = computed(() => ['date', 'both'].includes(setup.form.filter.mode));
+
 async function copyLink() {
   await navigator.clipboard.writeText(setup.shareUrl);
   copied.value = true;
@@ -189,7 +192,7 @@ async function copyLink() {
         >
         <div>
           <h2 id="folder-title" class="text-xl">Where should the files go?</h2>
-          <p class="muted text-sm">Pick a folder on your computer. CommonsFlow creates a sub-folder named after the category.</p>
+          <p class="muted text-sm">Pick a folder on your computer. CategoryDownloader creates a sub-folder named after the category.</p>
         </div>
       </header>
 
@@ -221,6 +224,49 @@ async function copyLink() {
           </span>
         </CdxCheckbox>
       </div>
+
+      <details id="filter-options" class="mt-5">
+        <summary class="muted cursor-pointer text-sm font-medium">Filter files (optional)</summary>
+        <div class="mt-3 flex flex-col gap-4">
+          <label class="flex flex-col gap-1 text-sm font-medium">
+            Only download files matching
+            <select id="filter-mode-select" v-model="setup.form.filter.mode" class="field w-56">
+              <option value="none">Everything (no filter)</option>
+              <option value="title">Page title</option>
+              <option value="date">Upload date</option>
+              <option value="both">Page title and upload date</option>
+            </select>
+          </label>
+          <div v-if="filterUsesTitle" class="flex flex-col gap-2">
+            <label class="flex flex-col gap-1 text-sm font-medium">
+              Title contains
+              <input
+                id="filter-title-input"
+                v-model="setup.form.filter.title"
+                type="text"
+                class="field"
+                :placeholder="setup.form.filter.regex ? '^Paris.*\\.jpe?g$' : 'Eiffel'"
+              />
+              <span class="muted font-normal">Without the “File:” prefix. Not case-sensitive.</span>
+            </label>
+            <CdxCheckbox id="filter-regex-checkbox" v-model="setup.form.filter.regex">Use a regular expression</CdxCheckbox>
+          </div>
+          <div v-if="filterUsesDate" class="flex flex-wrap gap-6">
+            <label class="flex flex-col gap-1 text-sm font-medium">
+              Uploaded from
+              <input id="filter-from-input" v-model="setup.form.filter.from" type="date" class="field w-44" />
+            </label>
+            <label class="flex flex-col gap-1 text-sm font-medium">
+              Uploaded up to
+              <input id="filter-to-input" v-model="setup.form.filter.to" type="date" class="field w-44" />
+            </label>
+          </div>
+          <CdxMessage v-if="setup.filterProblem" id="filter-error" type="error" :inline="true">{{ setup.filterProblem }}</CdxMessage>
+          <p v-else-if="setup.form.filter.mode !== 'none'" class="muted text-sm">
+            The file count above is for the whole category: with a filter, fewer files will be downloaded.
+          </p>
+        </div>
+      </details>
 
       <details id="advanced-options" class="mt-5">
         <summary class="muted cursor-pointer text-sm font-medium">Advanced options</summary>

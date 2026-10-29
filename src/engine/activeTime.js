@@ -6,7 +6,7 @@
  * The update uses `modify`, one atomic step on the row as it is NOW: the downloader updates the same row on every
  * finished file, and a read-then-write here could overwrite its counts with stale ones.
  *
- * @param {import('./db').CommonsFlowDB} db
+ * @param {import('./db').CategoryDownloaderDB} db
  * @param {string} jobId
  * @param {{ intervalMs?: number, now?: () => number }} [options]
  */

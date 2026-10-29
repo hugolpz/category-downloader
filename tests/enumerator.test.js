@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { CommonsFlowDB } from '../src/engine/db';
+import { CategoryDownloaderDB } from '../src/engine/db';
 import { enumerateStep, runEnumeration } from '../src/engine/enumerator';
 
 const TOTAL = 25;
@@ -60,7 +60,7 @@ const mkJob = (id) => ({
 
 let db;
 beforeEach(async () => {
-  db = new CommonsFlowDB(`t${Math.random()}`);
+  db = new CategoryDownloaderDB(`t${Math.random()}`);
   await db.jobs.put(mkJob('j'));
 });
 
@@ -126,7 +126,7 @@ describe('enumerator', () => {
     const api = fakeApi();
     await enumerateStep(db, async (p) => (seen.push(p), api(p)), 'j');
     const info = seen.find((p) => p.prop === 'imageinfo');
-    expect(info.iiprop).toBe('url|size|sha1|user|extmetadata');
+    expect(info.iiprop).toBe('url|size|sha1|user|timestamp|extmetadata');
     expect(info.iiextmetadatafilter).toBe('DateTime|DateTimeOriginal|LicenseShortName|AttributionRequired|LicenseUrl|License');
     const row = await db.items.get(['j', 0]);
     expect(row).toMatchObject({ descriptionurl: 'https://c/d', descriptionshorturl: 'https://c/s', meta: { LicenseShortName: 'CC0' } });

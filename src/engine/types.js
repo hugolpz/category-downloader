@@ -65,6 +65,8 @@
  * @property {number} pageSize
  * @property {number} imageinfoBatch
  * @property {JobOptions} options
+ * @property {{title?: string, regex?: boolean, from?: string, to?: string} | null} [filter] Only files matching it are queued:
+ *   `title` (substring, or regex if `regex`) and/or upload day `from`/`to` (YYYY-MM-DD, inclusive). Absent/null = everything.
  * @property {number} approxTotal Approximate total from categoryinfo, for the progress counter.
  * @property {number} enumerated
  * @property {number} pageCount API pages committed so far (numbers the metadata shards).

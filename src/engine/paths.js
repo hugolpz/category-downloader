@@ -51,5 +51,5 @@ export function folderName(category) {
     .replace(/[. ]+$/, '')
     .replace(/^\.+/, '_')
     .trim();
-  return truncateBytes(name, MAX_BYTES) || 'commonsflow';
+  return truncateBytes(name, MAX_BYTES) || 'category-downloader';
 }

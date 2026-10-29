@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
-import { CommonsFlowDB } from '../src/engine/db';
+import { CategoryDownloaderDB } from '../src/engine/db';
 import { buildReadme, renderTemplate, writeReadme } from '../src/engine/readme';
 import { memorySink, mkItem, mkJob } from './helpers';
 
@@ -27,7 +27,7 @@ describe('README', () => {
     expect(t).toContain('cmcontinue=<token>');
     expect(t).toContain('up to 50 page ids per call');
     expect(t).toContain(
-      'iiprop=url|size|sha1|user|extmetadata&iiextmetadatafilter=DateTime|DateTimeOriginal|LicenseShortName|AttributionRequired|LicenseUrl|License\n',
+      'iiprop=url|size|sha1|user|timestamp|extmetadata&iiextmetadatafilter=DateTime|DateTimeOriginal|LicenseShortName|AttributionRequired|LicenseUrl|License\n',
     );
     expect(t).toContain('**Contributors must be credited**');
     expect(t).toContain('Each file has a `<file>.json` beside it');
@@ -44,7 +44,7 @@ describe('README', () => {
     expect(t).toContain('## Resuming');
   });
   it('writeReadme reads counts from the DB and writes README.md at the folder root', async () => {
-    const db = new CommonsFlowDB(`t${Math.random()}`);
+    const db = new CategoryDownloaderDB(`t${Math.random()}`);
     await db.jobs.put({ ...job, enumerated: 3 });
     await db.counters.put({ jobId: 'j', done: 1, failed: 1, lowWater: 1, recent: [] });
     await db.failures.put(mkItem(1, { status: 'failed', lastError: 'HTTP 404' }));

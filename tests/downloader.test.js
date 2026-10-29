@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { CommonsFlowDB } from '../src/engine/db';
+import { CategoryDownloaderDB } from '../src/engine/db';
 import { retryFailed, runDownloads } from '../src/engine/downloader';
 import { writeMetadataShard } from '../src/engine/metadata';
 import { readProgress } from '../src/engine/stats';
@@ -9,7 +9,7 @@ import { body, memorySink, mkItem, mkJob, noSleep } from './helpers';
 
 let db;
 beforeEach(() => {
-  db = new CommonsFlowDB(`t${Math.random()}`);
+  db = new CategoryDownloaderDB(`t${Math.random()}`);
 });
 const seed = async (n, job = mkJob()) => {
   await db.jobs.put({ ...job, enumerated: n });

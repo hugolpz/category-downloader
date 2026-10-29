@@ -81,7 +81,7 @@ export const useJobStore = defineStore('job', () => {
     openJob(job); // before any await: the page may look at the store the moment the address changes
     runStarts.value++;
     await applyLimits(job.id, auth.botSpeed === 'on');
-    const res = await navigator.locks.request('commonsflow-run', { ifAvailable: true }, async (lock) => {
+    const res = await navigator.locks.request('category-downloader-run', { ifAvailable: true }, async (lock) => {
       if (!lock) {
         phase.value = 'error';
         message.value = 'A download is already running in another tab.';
@@ -117,7 +117,7 @@ export const useJobStore = defineStore('job', () => {
   /** The Start button: let the user pick the folder, then begin. */
   async function chooseFolderAndStart() {
     try {
-      await startNew(await window.showDirectoryPicker({ mode: 'readwrite', id: 'commonsflow' }));
+      await startNew(await window.showDirectoryPicker({ mode: 'readwrite', id: 'category-downloader' }));
     } catch (e) {
       if (e.name !== 'AbortError') auth.error = e.message;
     }
@@ -157,7 +157,7 @@ export const useJobStore = defineStore('job', () => {
       await resume();
     } catch {
       try {
-        await resume(await window.showDirectoryPicker({ mode: 'readwrite', id: 'commonsflow' }));
+        await resume(await window.showDirectoryPicker({ mode: 'readwrite', id: 'category-downloader' }));
       } catch (e) {
         if (e.name !== 'AbortError') resumeError.value = e.message;
       }

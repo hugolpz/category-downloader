@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { categoryInfo, listSubcategories, normalizeCategory } from '../api/commons';
+import { DEFAULT_FILTER, filterError } from '../engine/filter';
 import { useAuthStore } from './auth';
 import { appRouter } from '../router';
 import { categoryLocation } from '../utils/categoryPath';
@@ -16,7 +17,8 @@ import { buildQuery, buildQueryObject, parseParams } from '../utils/urlParams';
  */
 export const useSetupStore = defineStore('setup', () => {
   const auth = useAuthStore();
-  const form = reactive({ category: '', ...parseParams(location.search) });
+  // `filter` is not part of the address: it only applies to the download you start from this page.
+  const form = reactive({ category: '', ...parseParams(location.search), filter: { ...DEFAULT_FILTER } });
   const subcategories = ref([]);
   const rootInfo = ref(null);
   const busy = ref(false);
@@ -46,7 +48,8 @@ export const useSetupStore = defineStore('setup', () => {
     const order = new Map(selectionRows.value.map((r, i) => [r.title, i]));
     return [...form.cats].sort((a, b) => (order.get(a) ?? Infinity) - (order.get(b) ?? Infinity));
   });
-  const canStart = computed(() => selectedCategories.value.length > 0);
+  const filterProblem = computed(() => filterError(form.filter));
+  const canStart = computed(() => selectedCategories.value.length > 0 && !filterProblem.value);
 
   const approxTotal = computed(() => {
     const files = new Map(selectionRows.value.map((r) => [r.title, r.files]));
@@ -134,6 +137,7 @@ export const useSetupStore = defineStore('setup', () => {
     selectionRows,
     selectedCategories,
     canStart,
+    filterProblem,
     includeSubcats,
     rootInfo,
     busy,

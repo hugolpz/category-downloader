@@ -14,9 +14,9 @@ const auth = useAuthStore();
     <div class="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-8">
       <RouterLink id="brand-link" :to="{ name: 'home' }" class="flex items-center gap-2.5 no-underline" style="color: var(--ink)">
         <BrandMark />
-        <span class="font-display text-xl font-bold leading-none">CommonsFlow</span>
+        <span class="font-display text-xl font-bold leading-none">CategoryDownloader</span>
       </RouterLink>
-      <span id="app-tagline" class="eyebrow hidden lg:inline">Bulk download from Wikimedia Commons</span>
+      <span id="app-tagline" class="eyebrow hidden lg:inline">Bulk download from Wikimedia Categories</span>
       <span class="flex-1" />
       <BotSpeedBadge id="bot-speed-badge" :state="auth.botSpeed" />
       <template v-if="auth.loggedIn">

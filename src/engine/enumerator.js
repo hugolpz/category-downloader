@@ -1,8 +1,9 @@
 import { sleep } from './downloader';
+import { makeMatcher } from './filter';
 
 /** The only extmetadata keys we keep. Also sent as `iiextmetadatafilter`, so the server returns just these. */
 export const EXTMETADATA_KEYS = ['DateTime', 'DateTimeOriginal', 'LicenseShortName', 'AttributionRequired', 'LicenseUrl', 'License'];
-export const IIPROP = 'url|size|sha1|user|extmetadata';
+export const IIPROP = 'url|size|sha1|user|timestamp|extmetadata';
 
 function trimMeta(ext) {
   const out = {};
@@ -37,6 +38,7 @@ export async function enumerateStep(db, api, jobId, beforeCommit) {
   });
   const members = list.query.categorymembers;
 
+  const matches = makeMatcher(job.filter);
   const rows = [];
   for (let i = 0; i < members.length; i += job.imageinfoBatch) {
     const ids = members.slice(i, i + job.imageinfoBatch).map((m) => m.pageid);
@@ -50,6 +52,7 @@ export async function enumerateStep(db, api, jobId, beforeCommit) {
     for (const p of info.query.pages) {
       const ii = p.imageinfo?.[0];
       if (!ii) continue; // deleted/missing between the two calls
+      if (!matches({ title: p.title, timestamp: ii.timestamp })) continue; // the optional filter
       rows.push({
         seq: 0, // assigned just before commit
         meta: trimMeta(ii.extmetadata),

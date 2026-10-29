@@ -13,16 +13,17 @@
 
   This comment is removed from the generated file.
 -->
+
 # {{name}}
 
-Wikimedia Commons files, downloaded with CommonsFlow.
+Wikimedia Commons files, downloaded with CategoryDownloader.
 
 - **Status:** {{status}}
 - **Downloaded:** {{downloaded}} of {{listed}}{{#if listing_unfinished}} listed so far{{/if}}{{#if has_failed}}, {{failed_count}} failed{{/if}}
 - **Started / updated:** {{started}} / {{updated}}
 - **Source:** <{{source_url}}>
-{{#if root_excluded}}- **Top category's own files:** not included (only the subcategories below)
-{{/if}}{{#if has_subcategories}}- **Subcategories ({{subcategory_count}}):**
+  {{#if root_excluded}}- **Top category's own files:** not included (only the subcategories below)
+  {{/if}}{{#if has_subcategories}}- **Subcategories ({{subcategory_count}}):**
 {{subcategory_list}}
 {{/if}}
 ## Layout
@@ -68,9 +69,10 @@ Each file has its own license; check its Commons page before reuse (`https://com
 
 {{failed_list}}
 
-Use “Retry all” in CommonsFlow to retry.
+Use “Retry all” in CategoryDownloader to retry.
 {{/if}}{{#if not_done}}
+
 ## Resuming
 
-Open CommonsFlow, log in, choose “Resume”. Finished files are skipped.
+Open CategoryDownloader, log in, choose “Resume”. Finished files are skipped.
 {{/if}}

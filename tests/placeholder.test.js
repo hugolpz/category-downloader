@@ -41,9 +41,10 @@ describe('useCyclingPlaceholder', () => {
 });
 
 describe('EXAMPLE_CATEGORIES', () => {
-  it('lists the seven Lingua Libre categories in order', () => {
-    expect(EXAMPLE_CATEGORIES).toHaveLength(7);
-    expect(EXAMPLE_CATEGORIES[0]).toBe('Category:Lingua_Libre_pronunciation-sru');
+  it('lists the eight Lingua Libre categories in order', () => {
+    expect(EXAMPLE_CATEGORIES).toHaveLength(8);
+    expect(EXAMPLE_CATEGORIES[0]).toBe('Category:Lingua_Libre_pronunciation_of_languages_of_Indonesia');
+    expect(EXAMPLE_CATEGORIES[1]).toBe('Category:Lingua_Libre_pronunciation-sru');
     expect(EXAMPLE_CATEGORIES.at(-1)).toBe('Category:Lingua_Libre_pronunciation-other_(Q36759)');
     expect(EXAMPLE_CATEGORIES.every((c) => c.startsWith('Category:'))).toBe(true);
   });

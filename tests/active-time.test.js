@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CommonsFlowDB } from '../src/engine/db';
+import { CategoryDownloaderDB } from '../src/engine/db';
 import { trackActiveTime } from '../src/engine/activeTime';
 import { readProgress } from '../src/engine/stats';
 import { mkJob } from './helpers';
@@ -11,7 +11,7 @@ const row = async () => db.counters.get('j');
 beforeEach(async () => {
   // Fake only the clock and the interval: the (fake) database needs its own timers to work.
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
-  db = new CommonsFlowDB(`t${Math.random()}`);
+  db = new CategoryDownloaderDB(`t${Math.random()}`);
   await db.jobs.put(mkJob());
   await db.counters.put({ jobId: 'j', done: 0, failed: 0, lowWater: 0, recent: [] });
 });

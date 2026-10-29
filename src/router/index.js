@@ -67,7 +67,7 @@ export function createAppRouter({ history = createWebHistory(), routeTable = rou
   router.afterEach((to) => {
     if (typeof document === 'undefined') return;
     const what = to.name === 'category' ? String(to.params.category).replace(/_/g, ' ') : to.meta.title;
-    document.title = what ? `${what} · CommonsFlow` : 'CommonsFlow';
+    document.title = what ? `${what} · CategoryDownloader` : 'CategoryDownloader';
   });
   return router;
 }

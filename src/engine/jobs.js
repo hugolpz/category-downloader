@@ -1,4 +1,5 @@
 import { db } from './db';
+import { normalizeFilter } from './filter';
 import { folderName } from './paths';
 
 export const limitsFor = (botSpeed) => (botSpeed ? { pageSize: 5000, imageinfoBatch: 500 } : { pageSize: 500, imageinfoBatch: 50 });
@@ -16,6 +17,7 @@ export async function createJob(root, categories, form, dir, approxTotal, botSpe
     enumDone: false,
     ...limitsFor(botSpeed),
     options: { delayMs: form.delayMs, concurrency: form.concurrency },
+    filter: normalizeFilter(form.filter),
     approxTotal,
     enumerated: 0,
     pageCount: 0,

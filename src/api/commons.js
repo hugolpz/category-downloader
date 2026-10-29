@@ -17,7 +17,7 @@ export async function apiGet(params, token, { signal } = {}) {
     ...params,
   }).toString();
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, 'X-Requested-With': 'CommonsFlow' },
+    headers: { Authorization: `Bearer ${token}`, 'X-Requested-With': 'CategoryDownloader' },
     signal,
   });
   if (res.status === 401) throw new AuthExpiredError('Access token expired');

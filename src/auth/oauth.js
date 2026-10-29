@@ -73,7 +73,7 @@ export async function handleRedirect(search = location.search) {
 async function postAuth(path, body) {
   const res = await fetch(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'CommonsFlow' },
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'CategoryDownloader' },
     body: JSON.stringify(body ?? {}),
   });
   if (!res.ok) return null;

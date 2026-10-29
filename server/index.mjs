@@ -19,7 +19,7 @@ const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 const TOKEN_URL = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
 const API_URL = 'https://commons.wikimedia.org/w/api.php';
 // Wikimedia's UA policy wants a descriptive agent with contact info; browsers cannot set one, so we do.
-const USER_AGENT = `CommonsFlow/0.1 (${process.env.CONTACT ?? 'https://github.com/hugolpz'}) node`;
+const USER_AGENT = `CategoryDownloader/0.1 (${process.env.CONTACT ?? 'https://github.com/hugolpz'}) node`;
 const APP_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 // Enables POST /deploy (GitHub Actions uploads). Absent or shorter than 32 characters = endpoint does not exist.
@@ -95,7 +95,7 @@ async function handleAuth(req, res, path) {
   // Public values the SPA needs to start the login. Read at runtime so one build works for dev and production.
   if (req.method === 'GET' && path === '/auth/config') return json(res, 200, { clientId: CLIENT_ID, redirectUri: REDIRECT_URI });
   // Custom header forces a CORS preflight, so cross-site pages cannot call these endpoints.
-  if (req.method !== 'POST' || req.headers['x-requested-with'] !== 'CommonsFlow') {
+  if (req.method !== 'POST' || req.headers['x-requested-with'] !== 'CategoryDownloader') {
     return json(res, 403, { error: 'forbidden' });
   }
   if (path === '/auth/token') {
@@ -121,7 +121,7 @@ async function handleAuth(req, res, path) {
 // Same-origin relay to the Commons Action API: avoids CORS (Commons only allows listed origins)
 // and lets us send a proper User-Agent. Fixed upstream host, GET only, so it is not an open proxy.
 async function handleApi(req, res, search) {
-  if (req.method !== 'GET' || req.headers['x-requested-with'] !== 'CommonsFlow') {
+  if (req.method !== 'GET' || req.headers['x-requested-with'] !== 'CategoryDownloader') {
     return json(res, 403, { error: 'forbidden' });
   }
   const params = new URLSearchParams(search);
@@ -214,4 +214,4 @@ createServer(async (req, res) => {
     console.error(e);
     json(res, 500, { error: 'server_error' });
   }
-}).listen(PORT, () => console.log(`CommonsFlow server on :${PORT}`));
+}).listen(PORT, () => console.log(`CategoryDownloader server on :${PORT}`));

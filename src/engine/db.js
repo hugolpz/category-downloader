@@ -7,9 +7,9 @@ import Dexie from 'dexie';
  *  - failures  {@link import('./types.js').Item}, failed items kept for retry/export; small by nature
  *  - counters  {@link import('./types.js').Counters}, one row per job, updated on every completion
  */
-export class CommonsFlowDB extends Dexie {
+export class CategoryDownloaderDB extends Dexie {
   // New name: the first layout (status index) did not scale and cannot be migrated in place.
-  constructor(name = 'commonsflow-v2') {
+  constructor(name = 'category-downloader-v2') {
     super(name);
     this.version(1).stores({
       jobs: 'id',
@@ -21,4 +21,4 @@ export class CommonsFlowDB extends Dexie {
   }
 }
 
-export const db = new CommonsFlowDB();
+export const db = new CategoryDownloaderDB();

@@ -1,4 +1,4 @@
-# CommonsFlow
+# CategoryDownloader
 
 [![CI](https://github.com/hugolpz/category-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/hugolpz/category-downloader/actions/workflows/ci.yml)
 
