@@ -1,8 +1,9 @@
 /**
  * The optional filter of a download. `mode` picks what is tested: 'none' | 'title' | 'date' | 'both'.
- * The form keeps all the fields; `normalizeFilter` reduces them to what the mode uses (or null = no filter).
+ * The form uses 'both': every field is always there and an empty one tests nothing, so with all of them empty
+ * `normalizeFilter` gives null (no filter). The other modes remain for filters made before.
  */
-export const DEFAULT_FILTER = { mode: 'none', title: '', regex: false, from: '', to: '' };
+export const DEFAULT_FILTER = { mode: 'both', title: '', regex: false, from: '', to: '' };
 
 /** The first error that would make the filter unusable (bad regex, inverted dates), else ''. */
 export function filterError(f) {
@@ -51,4 +52,17 @@ export function makeMatcher(filter) {
     }
     return true;
   };
+}
+
+/**
+ * A day typed by a person ("2024/3/5", "2024-03-05", "2024.03.05") as the YYYY-MM-DD the filter compares.
+ * @returns {string | null} null when it is not a real calendar day
+ */
+export function parseDay(text) {
+  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(String(text).trim());
+  if (!m) return null;
+  const [y, mo, d] = m.slice(1).map(Number);
+  const date = new Date(Date.UTC(y, mo - 1, d));
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) return null;
+  return `${m[1]}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }

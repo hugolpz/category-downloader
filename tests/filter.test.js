@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterError, makeMatcher, normalizeFilter } from '../src/engine/filter';
+import { filterError, makeMatcher, normalizeFilter, parseDay } from '../src/engine/filter';
 
 const row = (title, timestamp) => ({ title, timestamp });
 
@@ -31,5 +31,16 @@ describe('filter', () => {
     expect(filterError({ mode: 'date', title: '(', regex: true })).toBe('');
     expect(normalizeFilter({ mode: 'date', title: 'x', from: '2020-01-01', to: '' })).toEqual({ from: '2020-01-01' });
     expect(normalizeFilter({ mode: 'title', title: '' })).toBeNull();
+  });
+});
+
+describe('parseDay', () => {
+  it('reads typed days in any of YYYY/MM/DD, YYYY-MM-DD, YYYY.M.D', () => {
+    expect(parseDay('2024/03/05')).toBe('2024-03-05');
+    expect(parseDay(' 2024-3-5 ')).toBe('2024-03-05');
+    expect(parseDay('2024.12.31')).toBe('2024-12-31');
+  });
+  it('refuses what is not a real day', () => {
+    for (const bad of ['', '2024/02/30', '2024/13/01', '03/05/2024', '2024/03', 'abc']) expect(parseDay(bad)).toBeNull();
   });
 });
