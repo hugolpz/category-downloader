@@ -78,7 +78,15 @@ a { color: var(--forest); }
   background: #fff;
   color: var(--ink);
 }
+/* A soft pulse that asks for attention without moving anything (off for people who prefer reduced motion). */
+@keyframes nudge {
+  0%, 60%, 100% { background-color: var(--surface-sunken); }
+  15%, 45% { background-color: var(--maize-tint); border-color: var(--maize); }
+}
+.nudge { animation: nudge 10s infinite; }
+@media (prefers-reduced-motion: reduce) { .nudge { animation: none; } }
 .field:focus { border-color: var(--forest); outline: none; box-shadow: inset 0 0 0 1px var(--forest); }
+.field.field-invalid, .field.field-invalid:focus { border-color: var(--terracotta); box-shadow: none; }
 
 /* --- Codex accent colours: blue -> forest green (Codex has no runtime colour variables) --- */
 .cdx-button.cdx-button--action-progressive.cdx-button--weight-primary:enabled {
@@ -102,3 +110,50 @@ a { color: var(--forest); }
   background-color: var(--forest);
   border-color: var(--forest);
 }
+
+/* --- Language selector: a pill like the header's other badges, in the palette (Codex reads these variables, menu included) --- */
+.language-select {
+  --background-color-base: var(--surface-card);
+  --background-color-interactive-subtle: var(--surface-sunken);
+  --background-color-interactive-subtle--hover: var(--border);
+  --background-color-interactive-subtle--active: var(--border-strong);
+  --border-color-interactive: var(--border);
+  --border-color-interactive--hover: var(--border-strong);
+  --border-color-interactive--active: var(--forest);
+  --border-color-base: var(--border);
+  --border-color-progressive--focus: var(--forest);
+  --box-shadow-color-progressive--focus: var(--forest);
+  --box-shadow-color-alpha-base: #1a15101a;
+  --color-base: var(--ink);
+  --color-subtle: var(--ink-3);
+  --color-progressive: var(--forest-deep);
+  --color-progressive--hover: var(--forest-deep);
+  --color-progressive--active: var(--forest-deep);
+  --background-color-progressive-subtle: var(--forest-tint);
+  --background-color-progressive-subtle--hover: var(--forest-tint);
+  --background-color-progressive-subtle--active: var(--forest-tint);
+}
+.language-select .cdx-select-vue__handle {
+  min-width: 0;
+  min-height: 32px;
+  padding-left: 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+}
+.language-select .cdx-select-vue__handle:hover { color: var(--ink); }
+/* One light 1px border when focused or open (Codex adds a second, inset one). */
+.language-select .cdx-select-vue__handle:focus:not(:active) { box-shadow: none; }
+/* The menu floats under the pill, fully rounded, instead of being glued to it with squared top corners. */
+.language-select .cdx-menu {
+  top: 100%;
+  margin-top: 6px;
+  border-radius: var(--radius-lg) !important; /* Codex squares the top corners (it expects the menu glued to the handle) */
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.language-select .cdx-menu-item { font-size: 14px; }
+/* Codex squares the handle's bottom corners with an inline style while the menu is open: keep it a pill. */
+.language-select .cdx-select-vue__handle { border-radius: var(--radius-pill) !important; }
+.language-select .cdx-menu-item { white-space: nowrap; }
+.language-select .cdx-menu-item--highlighted:not(.cdx-menu-item--selected) { background-color: var(--surface-sunken); }

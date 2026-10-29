@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { categoryInfo, listSubcategories, normalizeCategory } from '../api/commons';
 import { DEFAULT_FILTER, filterError } from '../engine/filter';
+import { t } from '../i18n';
 import { useAuthStore } from './auth';
 import { appRouter } from '../router';
 import { categoryLocation } from '../utils/categoryPath';
@@ -101,7 +102,7 @@ export const useSetupStore = defineStore('setup', () => {
     error.value = null;
     try {
       const info = (await categoryInfo([rootTitle.value], auth.token)).get(rootTitle.value);
-      if (!info?.exists) throw new Error(`${rootTitle.value} does not exist`);
+      if (!info?.exists) throw new Error(t('cd-error-not-exist', rootTitle.value));
       rootInfo.value = info;
       subcategories.value = includeSubcats.value ? await listSubcategories(rootTitle.value, auth.token, auth.botSpeed === 'on') : [];
       if (form.cats !== null) {

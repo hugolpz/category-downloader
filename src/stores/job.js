@@ -9,6 +9,7 @@ import { applyLimits, createJob, deleteJob, findUnfinishedJob, getUnfinishedJob 
 import { normalizeCategory } from '../api/commons';
 import { appRouter } from '../router';
 import { categoryLocation, jobRoot } from '../utils/categoryPath';
+import { t } from '../i18n';
 import { useAuthStore } from './auth';
 import { useSetupStore } from './setup';
 
@@ -84,7 +85,7 @@ export const useJobStore = defineStore('job', () => {
     const res = await navigator.locks.request('category-downloader-run', { ifAvailable: true }, async (lock) => {
       if (!lock) {
         phase.value = 'error';
-        message.value = 'A download is already running in another tab.';
+        message.value = t('cd-error-already-running');
         return;
       }
       let wake;
@@ -136,8 +137,8 @@ export const useJobStore = defineStore('job', () => {
     const job = unfinished.value;
     if (!job) return;
     let handle = dir ?? job.dirHandle;
-    if (!handle) throw new Error('Pick the download folder again.');
-    if ((await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error('Folder permission denied.');
+    if (!handle) throw new Error(t('cd-error-pick-folder'));
+    if ((await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error(t('cd-error-permission'));
     if (dir) await db.jobs.update(job.id, { dirHandle: dir });
     unfinished.value = null;
     void appRouter().push(categoryLocation(jobRoot(job)));

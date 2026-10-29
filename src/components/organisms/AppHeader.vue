@@ -4,6 +4,8 @@ import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import { cdxIconLogIn, cdxIconLogOut } from '@wikimedia/codex-icons';
 import BrandMark from '../atoms/BrandMark.vue';
 import BotSpeedBadge from '../molecules/BotSpeedBadge.vue';
+import LanguageMenuSelector from '../molecules/LanguageMenuSelector.vue';
+import { t } from '../../i18n';
 import { useAuthStore } from '../../stores/auth';
 
 const auth = useAuthStore();
@@ -16,17 +18,18 @@ const auth = useAuthStore();
         <BrandMark />
         <span class="font-display text-xl font-bold leading-none">CategoryDownloader</span>
       </RouterLink>
-      <span id="app-tagline" class="eyebrow hidden lg:inline">Bulk download from Wikimedia Categories</span>
+      <span id="app-tagline" class="eyebrow hidden lg:inline">{{ t('cd-tagline') }}</span>
       <span class="flex-1" />
-      <BotSpeedBadge id="bot-speed-badge" :state="auth.botSpeed" />
+      <LanguageMenuSelector />
+      <BotSpeedBadge v-if="auth.botSpeed === 'on'" id="bot-speed-badge" />
       <template v-if="auth.loggedIn">
         <span id="user-name" class="hidden text-sm font-medium sm:inline">{{ auth.userName }}</span>
-        <CdxButton id="logout-button" weight="quiet" aria-label="Log out" title="Log out" @click="auth.logout()"
+        <CdxButton id="logout-button" weight="quiet" :aria-label="t('cd-logout')" :title="t('cd-logout')" @click="auth.logout()"
           ><CdxIcon :icon="cdxIconLogOut"
         /></CdxButton>
       </template>
       <CdxButton v-else id="login-button" action="progressive" weight="primary" @click="auth.login()">
-        <CdxIcon :icon="cdxIconLogIn" size="small" /> Log in
+        <CdxIcon :icon="cdxIconLogIn" size="small" /> {{ t('cd-login') }}
       </CdxButton>
     </div>
   </header>

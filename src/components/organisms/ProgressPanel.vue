@@ -5,6 +5,7 @@ import { cdxIconPause, cdxIconPlay, cdxIconSuccess } from '@wikimedia/codex-icon
 import { useAuthStore } from '../../stores/auth';
 import { useJobStore } from '../../stores/job';
 import { useProgressStore } from '../../stores/progress';
+import { t } from '../../i18n';
 import { formatDuration, formatRate } from '../../utils/format';
 import FailedList from '../molecules/FailedList.vue';
 import ProgressBar from '../molecules/ProgressBar.vue';
@@ -18,20 +19,9 @@ const p = useProgressStore();
 const running = computed(() => job.phase === 'running');
 const stopping = computed(() => job.phase === 'stopping');
 const celebrate = computed(() => job.phase === 'done');
-const title = computed(
-  () =>
-    ({
-      running: 'Downloading…',
-      stopping: 'Pausing…',
-      stopped: 'Paused',
-      done: 'All done!',
-      'paused-auth': 'Please log in again',
-      error: 'Stopped by an error',
-      idle: 'Ready',
-    })[job.phase],
-);
+const title = computed(() => t(`cd-phase-${job.phase}`));
 const finished = computed(() => p.counts.done + p.counts.failed);
-const folder = computed(() => job.folder ?? 'your folder');
+const folder = computed(() => job.folder ?? t('cd-folder-fallback'));
 
 const eta = computed(() => {
   const left = Math.max(0, p.total - finished.value);
@@ -42,30 +32,30 @@ const tiles = computed(() =>
     ? [
         {
           id: 'stat-files-saved',
-          label: 'Files saved',
+          label: t('cd-stat-files-saved'),
           value: p.counts.done.toLocaleString(),
-          hint: p.counts.failed ? `${p.counts.failed.toLocaleString()} to retry` : 'No failures',
+          hint: p.counts.failed ? t('cd-stat-to-retry', p.counts.failed.toLocaleString()) : t('cd-stat-no-failures'),
           tone: 'good',
         },
-        { id: 'stat-average-speed', label: 'Average speed', value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
-        { id: 'stat-time-taken', label: 'Time taken', value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
-        { id: 'stat-folder', label: 'Saved in', value: folder.value, hint: 'inside the folder you picked' },
+        { id: 'stat-average-speed', label: t('cd-stat-average-speed'), value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
+        { id: 'stat-time-taken', label: t('cd-stat-time-taken'), value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
+        { id: 'stat-folder', label: t('cd-stat-saved-in'), value: folder.value, hint: t('cd-stat-saved-in-hint') },
       ]
     : [
         {
           id: 'stat-saved-so-far',
-          label: 'Saved so far',
+          label: t('cd-stat-saved-so-far'),
           value: p.counts.done.toLocaleString(),
-          hint: `of ~${p.total.toLocaleString()}`,
+          hint: t('cd-stat-of-total', p.total.toLocaleString()),
           tone: 'good',
         },
         running.value
-          ? { id: 'stat-speed', label: 'Speed', value: formatRate(p.perSecond) }
-          : { id: 'stat-average-speed', label: 'Average speed', value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
+          ? { id: 'stat-speed', label: t('cd-stat-speed'), value: formatRate(p.perSecond) }
+          : { id: 'stat-average-speed', label: t('cd-stat-average-speed'), value: p.hasTiming ? formatRate(p.averagePerSecond) : '—' },
         running.value
-          ? { id: 'stat-time-left', label: 'Time left', value: eta.value }
-          : { id: 'stat-time-taken', label: 'Time spent', value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
-        { id: 'stat-waiting', label: 'Waiting', value: p.counts.pending.toLocaleString() },
+          ? { id: 'stat-time-left', label: t('cd-stat-time-left'), value: eta.value }
+          : { id: 'stat-time-taken', label: t('cd-stat-time-spent'), value: p.hasTiming ? formatDuration(p.activeMs) : '—' },
+        { id: 'stat-waiting', label: t('cd-stat-waiting'), value: p.counts.pending.toLocaleString() },
       ],
 );
 </script>
@@ -89,11 +79,12 @@ const tiles = computed(() =>
         <div class="min-w-0">
           <h2 id="progress-title" class="text-2xl" style="color: var(--ink-on-dark)">{{ title }}</h2>
           <p id="finish-summary" style="color: var(--ink-on-dark-muted)">
-            <strong class="num" style="color: var(--ink-on-dark)">{{ p.counts.done.toLocaleString() }}</strong> files saved to
-            <strong style="color: var(--ink-on-dark)">{{ folder }}</strong
-            ><template v-if="p.hasTiming"> in {{ formatDuration(p.activeMs) }}</template
-            >.
-            <template v-if="p.counts.failed">{{ p.counts.failed.toLocaleString() }} just need another try.</template>
+            {{
+              p.hasTiming
+                ? t('cd-finish-summary-timed', p.counts.done, p.counts.done.toLocaleString(), folder, formatDuration(p.activeMs))
+                : t('cd-finish-summary', p.counts.done, p.counts.done.toLocaleString(), folder)
+            }}
+            <template v-if="p.counts.failed">{{ t('cd-finish-failed', p.counts.failed, p.counts.failed.toLocaleString()) }}</template>
           </p>
         </div>
       </div>
@@ -106,7 +97,9 @@ const tiles = computed(() =>
           <h2 id="progress-title" class="text-2xl">{{ title }}</h2>
           <CdxProgressIndicator v-if="running || stopping" id="progress-spinner">{{ title }}</CdxProgressIndicator>
           <span class="flex-1" />
-          <CdxButton v-if="running" id="pause-button" @click="job.stop()"><CdxIcon :icon="cdxIconPause" size="small" /> Pause</CdxButton>
+          <CdxButton v-if="running" id="pause-button" @click="job.stop()"
+            ><CdxIcon :icon="cdxIconPause" size="small" /> {{ t('cd-pause') }}</CdxButton
+          >
           <CdxButton
             v-else-if="job.unfinished"
             id="progress-resume-button"
@@ -115,19 +108,21 @@ const tiles = computed(() =>
             :disabled="!auth.loggedIn"
             @click="job.resumeOrPick()"
           >
-            <CdxIcon :icon="cdxIconPlay" size="small" /> Resume
+            <CdxIcon :icon="cdxIconPlay" size="small" /> {{ t('cd-resume') }}
           </CdxButton>
         </header>
         <div v-else-if="job.unfinished" id="finished-resume" class="mb-4">
           <CdxButton id="retry-rest-button" action="progressive" weight="primary" :disabled="!auth.loggedIn" @click="job.resumeOrPick()">
-            <CdxIcon :icon="cdxIconPlay" size="small" /> Resume to retry the rest
+            <CdxIcon :icon="cdxIconPlay" size="small" /> {{ t('cd-resume-rest') }}
           </CdxButton>
         </div>
 
         <p v-if="stopping" id="pausing-note" class="muted mb-3 text-sm">
-          Finishing downloads in progress and writing the README. This can take a few seconds.
+          {{ t('cd-pausing-note') }}
         </p>
-        <p v-else-if="job.unfinished && !auth.loggedIn" id="login-to-resume-note" class="muted mb-3 text-sm">Log in to resume.</p>
+        <p v-else-if="job.unfinished && !auth.loggedIn" id="login-to-resume-note" class="muted mb-3 text-sm">
+          {{ t('cd-login-to-resume') }}
+        </p>
         <p v-if="job.resumeError" id="resume-error" class="mb-3 text-sm" style="color: var(--terracotta)">{{ job.resumeError }}</p>
 
         <CdxMessage v-if="job.phase === 'paused-auth'" id="login-expired-message" type="warning" :inline="false" class="mb-4">{{
@@ -139,13 +134,13 @@ const tiles = computed(() =>
 
         <p v-if="!celebrate" id="progress-counter" class="mb-2 text-lg">
           <strong class="num font-display text-3xl">{{ p.counts.done.toLocaleString() }}</strong>
-          <span class="muted"> of ~{{ p.total.toLocaleString() }} files saved</span>
-          <span v-if="!p.enumDone" class="muted text-sm"> · still listing ({{ p.enumerated.toLocaleString() }} found)</span>
+          <span class="muted"> {{ t('cd-counter-rest', p.total.toLocaleString()) }}</span>
+          <span v-if="!p.enumDone" class="muted text-sm"> · {{ t('cd-counter-listing', p.enumerated.toLocaleString()) }}</span>
           <span v-if="p.counts.failed" class="text-sm" style="color: var(--gold-deep)">
-            · {{ p.counts.failed.toLocaleString() }} to retry, see below</span
+            · {{ t('cd-counter-failed', p.counts.failed.toLocaleString()) }}</span
           >
         </p>
-        <ProgressBar id="progress-bar" :value="finished" :max="Math.max(p.total, 1)" label="Download progress" />
+        <ProgressBar id="progress-bar" :value="finished" :max="Math.max(p.total, 1)" :label="t('cd-progress-label')" />
 
         <div id="stats-grid" class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile v-for="t in tiles" :key="t.label" v-bind="t" />
@@ -158,7 +153,7 @@ const tiles = computed(() =>
 
     <details v-if="job.readme" id="readme-viewer" class="card p-5">
       <summary class="cursor-pointer font-display text-lg font-semibold">
-        README.md <span class="muted font-body text-sm font-normal">— saved in the download folder</span>
+        README.md <span class="muted font-body text-sm font-normal">— {{ t('cd-readme-note') }}</span>
       </summary>
       <pre id="readme-content" class="mb-0 mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed">{{ job.readme }}</pre>
     </details>

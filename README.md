@@ -138,7 +138,11 @@ When you add an element worth targeting, follow the same pattern. Repeated eleme
 
 It is plain JavaScript (no TypeScript, no build step for types). Data shapes are documented with JSDoc in `src/engine/types.js`. Before opening a pull request, please run `npm test` and `npm run lint`. The most valuable tests are the ones around resume and failure, in `tests/downloader.test.js` and `tests/enumerator.test.js`.
 
-Ideas welcome: Firefox/Safari support (chunked ZIP fallback), dark mode, more languages.
+### Translating
+
+The interface is translated with [Banana](https://github.com/wikimedia/banana-i18n) message files, the format of translatewiki.net: `src/i18n/en.json` is the source, `qqq.json` explains every message to translators, and `ar`, `es`, `fr`, `hi`, `id`, `pt`, `sw`, `uk`, `zh` are the other languages (the machine-made ones deserve a native speaker's review). The pencil icon beside the language selector opens the selected language's file for editing on GitHub. To add a language, add `src/i18n/<code>.json` and one line to `LANGUAGES` in `src/i18n/index.js`. Messages use `$1` parameters and `{{PLURAL:$1|one|other}}`; the page language can also be forced with `?uselang=fr`. The generated README written into download folders stays English.
+
+Ideas welcome: Firefox/Safari support (chunked ZIP fallback), dark mode.
 
 ---
 

@@ -1,6 +1,7 @@
 <script setup>
 import { CdxIcon } from '@wikimedia/codex';
 import { cdxIconCheck, cdxIconTray } from '@wikimedia/codex-icons';
+import { t } from '../../i18n';
 
 defineProps({
   recent: { type: Array, required: true },
@@ -12,8 +13,22 @@ defineProps({
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <section
       v-for="col in [
-        { id: 'recent-log', title: 'Just saved', icon: cdxIconCheck, rows: recent, empty: 'Nothing saved yet.', tone: 'var(--forest)' },
-        { id: 'upcoming-log', title: 'Up next', icon: cdxIconTray, rows: upcoming, empty: 'Queue is empty.', tone: 'var(--ink-3)' },
+        {
+          id: 'recent-log',
+          title: t('cd-log-saved'),
+          icon: cdxIconCheck,
+          rows: recent,
+          empty: t('cd-log-saved-empty'),
+          tone: 'var(--forest)',
+        },
+        {
+          id: 'upcoming-log',
+          title: t('cd-log-upcoming'),
+          icon: cdxIconTray,
+          rows: upcoming,
+          empty: t('cd-log-upcoming-empty'),
+          tone: 'var(--ink-3)',
+        },
       ]"
       :id="col.id"
       :key="col.title"

@@ -4,6 +4,7 @@ import { RouterView } from 'vue-router';
 import { CdxMessage } from '@wikimedia/codex';
 import AppFooter from './components/organisms/AppFooter.vue';
 import AppHeader from './components/organisms/AppHeader.vue';
+import { t } from './i18n';
 import { useAuthStore } from './stores/auth';
 import { useJobStore } from './stores/job';
 import { useProgressStore } from './stores/progress';
@@ -29,7 +30,7 @@ watch(
     <AppHeader />
     <main id="main-content" class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-8">
       <CdxMessage v-if="!supported" id="browser-support-warning" type="warning" :inline="false">
-        This browser cannot save into a chosen folder. Please use Chrome, Edge or another Chromium-based browser.
+        {{ t('cd-browser-unsupported') }}
       </CdxMessage>
       <CdxMessage v-if="auth.error" id="app-error" type="error" :inline="false">{{ auth.error }}</CdxMessage>
 

@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import { cdxIconAlert, cdxIconReload } from '@wikimedia/codex-icons';
 import { useProgressStore } from '../../stores/progress';
+import { t } from '../../i18n';
 
 const props = defineProps({ count: { type: Number, required: true } });
 const emit = defineEmits(['retry']);
@@ -28,14 +29,13 @@ async function exportJson() {
   <section class="card p-5" style="border-left: 4px solid var(--maize)">
     <div class="mb-3 flex flex-wrap items-center gap-3">
       <h3 id="failed-title" class="flex items-center gap-2 text-lg">
-        <CdxIcon :icon="cdxIconAlert" style="color: var(--maize)" />{{ count.toLocaleString() }} file{{ count === 1 ? ' needs' : 's need' }}
-        another try
+        <CdxIcon :icon="cdxIconAlert" style="color: var(--maize)" />{{ t('cd-failed-title', count, count.toLocaleString()) }}
       </h3>
       <span class="flex-1" />
       <CdxButton id="retry-failed-button" size="small" action="progressive" weight="primary" @click="emit('retry')"
-        ><CdxIcon :icon="cdxIconReload" size="small" /> Retry all</CdxButton
+        ><CdxIcon :icon="cdxIconReload" size="small" /> {{ t('cd-failed-retry-all') }}</CdxButton
       >
-      <CdxButton id="export-errors-button" size="small" @click="exportJson">Export errors.json</CdxButton>
+      <CdxButton id="export-errors-button" size="small" @click="exportJson">{{ t('cd-failed-export') }}</CdxButton>
     </div>
     <ul id="failed-files" class="m-0 list-none p-0 font-mono text-xs leading-6">
       <li v-for="r in rows" :key="r.pageid" class="truncate" :title="r.lastError">
@@ -43,8 +43,12 @@ async function exportJson() {
       </li>
     </ul>
     <div v-if="count > PAGE" class="mt-3 flex gap-2">
-      <CdxButton id="failed-previous-button" size="small" :disabled="offset === 0" @click="offset -= PAGE">Previous</CdxButton>
-      <CdxButton id="failed-next-button" size="small" :disabled="offset + PAGE >= count" @click="offset += PAGE">Next</CdxButton>
+      <CdxButton id="failed-previous-button" size="small" :disabled="offset === 0" @click="offset -= PAGE">{{
+        t('cd-previous')
+      }}</CdxButton>
+      <CdxButton id="failed-next-button" size="small" :disabled="offset + PAGE >= count" @click="offset += PAGE">{{
+        t('cd-next')
+      }}</CdxButton>
     </div>
   </section>
 </template>

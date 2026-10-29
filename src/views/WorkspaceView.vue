@@ -6,6 +6,7 @@ import HeroIntro from '../components/organisms/HeroIntro.vue';
 import ProgressPanel from '../components/organisms/ProgressPanel.vue';
 import SetupPanel from '../components/organisms/SetupPanel.vue';
 import ResumePrompt from '../components/molecules/ResumePrompt.vue';
+import { t } from '../i18n';
 import { useAuthStore } from '../stores/auth';
 import { useJobStore } from '../stores/job';
 import { useSetupStore } from '../stores/setup';
@@ -107,14 +108,14 @@ watch(
             >3</span
           >
           <div>
-            <h2 id="step-download-title" ref="stepTitle" tabindex="-1" class="text-xl" style="outline: none">Watch it download</h2>
-            <p class="muted text-sm">Speed, what was just saved, what comes next and the final summary appear here.</p>
+            <h2 id="step-download-title" ref="stepTitle" tabindex="-1" class="text-xl" style="outline: none">{{ t('cd-step3-title') }}</h2>
+            <p class="muted text-sm">{{ t('cd-step3-text') }}</p>
           </div>
         </header>
 
         <ProgressPanel v-if="step3 === 'ok'" />
         <p v-else id="step-download-placeholder" class="card muted p-6 text-sm">
-          {{ step3 === 'loading' ? 'Loading…' : 'Press “Choose folder & start” in step 2 and the download shows up here.' }}
+          {{ step3 === 'loading' ? t('cd-step3-loading') : t('cd-step3-placeholder') }}
         </p>
       </section>
     </template>
