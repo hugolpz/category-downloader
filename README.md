@@ -1,12 +1,12 @@
 # CommonsFlow
 
-[![CI](https://github.com/hugolpz/commons-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/hugolpz/commons-flow/actions/workflows/ci.yml)
+[![CI](https://github.com/hugolpz/category-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/hugolpz/category-downloader/actions/workflows/ci.yml)
 
 Download a whole [Wikimedia Commons](https://commons.wikimedia.org/) category (up to 500,000+ files) straight into a folder on your computer, with their metadata and licenses. If anything goes wrong (closed tab, crash, lost connection, expired login) it resumes exactly where it stopped.
 
 It runs in the browser: files go directly from Wikimedia to your disk, nothing is uploaded anywhere else.
 
-- Live: <https://commons-flow.toolforge.org/> (Toolforge)
+- Live: <https://category-downloader.toolforge.org/> (Toolforge)
 - Browser: Chromium-based (Chrome, Edge, …). It needs the [File System Access API](https://developer.mozilla.org/docs/Web/API/File_System_API) to write into a chosen folder.
 
 ## Features
@@ -35,7 +35,7 @@ npm run dev              # terminal 2: the app on http://localhost:8079/
 Register a **confidential** OAuth 2.0 consumer on Meta: <https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/propose/oauth2>
 
 - Grants: basic rights, plus high-volume (bot) access if you want bot speed.
-- Callback URL: `http://localhost:8079/oauth/wikimedia/success` for development, `https://commons-flow.toolforge.org/` in production. A consumer has a single callback, so use one consumer per environment.
+- Callback URL: `http://localhost:8079/oauth/wikimedia/success` for development, `https://category-downloader.toolforge.org/` in production. A consumer has a single callback, so use one consumer per environment.
 - Put the key and secret in `.env` (see `.env.example`). The secret stays on the server and never reaches the browser.
 
 ## Scripts

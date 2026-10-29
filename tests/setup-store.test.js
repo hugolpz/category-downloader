@@ -21,7 +21,7 @@ import { useAuthStore } from '../src/stores/auth';
 import { useSetupStore } from '../src/stores/setup';
 
 beforeEach(async () => {
-  vi.stubGlobal('location', { origin: 'https://commons-flow.test', search: '' });
+  vi.stubGlobal('location', { origin: 'https://category-downloader.test', search: '' });
   setActivePinia(createPinia());
   await appRouter().push('/');
 });
@@ -53,11 +53,11 @@ describe('setup store: address ↔ form', () => {
 
   it('shareUrl is /Category:… plus only the non-default options', () => {
     const setup = useSetupStore();
-    expect(setup.shareUrl).toBe('https://commons-flow.test/');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/');
     setup.setCategory('Category:Lingua Libre pronunciation-sru');
-    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Lingua_Libre_pronunciation-sru');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/Category:Lingua_Libre_pronunciation-sru');
     setup.form.delayMs = 500;
-    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Lingua_Libre_pronunciation-sru?delay=500');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/Category:Lingua_Libre_pronunciation-sru?delay=500');
     expect(setup.shareUrl).not.toContain('?category=');
   });
 
@@ -202,10 +202,10 @@ describe('setup store: which categories are downloaded (the top one can be left 
     const setup = useSetupStore();
     setup.setCategory('Category:Foo bar');
     setup.form.cats = ['Category:Foo bar/A'];
-    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar?cats=Category:Foo_bar/A');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/Category:Foo_bar?cats=Category:Foo_bar/A');
     setup.form.cats = ['Category:Foo bar', 'Category:Foo bar/A'];
-    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar?cats=Category:Foo_bar|Category:Foo_bar/A');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/Category:Foo_bar?cats=Category:Foo_bar|Category:Foo_bar/A');
     setup.form.cats = null;
-    expect(setup.shareUrl).toBe('https://commons-flow.test/Category:Foo_bar');
+    expect(setup.shareUrl).toBe('https://category-downloader.test/Category:Foo_bar');
   });
 });

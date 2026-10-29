@@ -86,7 +86,7 @@ jobs:
   deploy:
     name: Deploy to Toolforge
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'hugolpz/commons-flow'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'hugolpz/category-downloader'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production # holds DEPLOY_SECRET and DEPLOY_URL; add required reviewers here if you want a manual gate
@@ -113,7 +113,7 @@ jobs:
       - name: Upload to Toolforge
         env:
           DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
-          DEPLOY_URL: ${{ vars.DEPLOY_URL }} # https://commons-flow.toolforge.org
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }} # https://category-downloader.toolforge.org
         run: |
           set -euo pipefail
           ts="$(( $(date +%s) * 1000 ))"
