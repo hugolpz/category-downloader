@@ -8,7 +8,7 @@ import { categoryLocation, categoryParam } from '../utils/categoryPath';
  * Every URL the app answers (history mode; server/index.mjs serves index.html for any unknown GET path).
  *
  *   /              start page: type a category, then press Check (the address becomes /Category:…)
- *   /Category:Foo_bar  the same single page with that category already in the field (and its download, if this
+ *   /Category:Foo_bar  (or /fr:wp:Category:Foo for another wiki) the same single page with that category already in the field (and its download, if this
  *                  browser has one, shown in step 3). Same spelling as Commons URLs. Optional
  *                  options in the query: ?cats=Category:Foo|Category:Foo/Sub&delay=500&concurrency=2
  *                  (`cats` = categories to download; the top one's own files only if it is listed)
@@ -22,8 +22,15 @@ const workspace = () => import('../views/WorkspaceView.vue'); // one page for bo
 
 export const routes = [
   { path: '/', name: 'home', component: workspace, meta: { title: 'Download a Commons category' } },
-  // The regex keeps this route to "Category:…" (any case of the prefix); the title may contain / ( ) % and accents.
-  { path: '/:category([Cc]ategory:.+)', name: 'category', component: workspace, props: true, meta: { title: 'Download' } },
+  // The regex keeps this route to "Category:…" (any case of the prefix), optionally after a wiki such as "fr:wp:" or "c:"
+  // (see api/wiki.js; no groups in the pattern, vue-router cannot parse them); the title may contain / ( ) % and accents.
+  {
+    path: '/:category([a-z:-]*[Cc]ategory:.+)',
+    name: 'category',
+    component: workspace,
+    props: true,
+    meta: { title: 'Download' },
+  },
   { path: '/:rest(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { title: 'Page not found' } },
 ];
 

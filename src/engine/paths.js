@@ -1,3 +1,5 @@
+import { parseCategory } from '../api/wiki';
+
 const RESERVED = /^(con|prn|aux|nul|com\d|lpt\d)$/i;
 const MAX_BYTES = 200; // well under the 255-byte limit of common filesystems
 const enc = new TextEncoder();
@@ -44,8 +46,8 @@ export const metadataShardPath = (n) => ['metadata', `page-${String(n).padStart(
 
 /** Top-level folder for a job: the category name, made filesystem-safe. */
 export function folderName(category) {
-  const name = category
-    .replace(/^Category:/, '')
+  const { prefix, name: plain } = parseCategory(category);
+  const name = (prefix ? `${plain} (${prefix.replace(/:/g, '.')})` : plain)
     // eslint-disable-next-line no-control-regex -- control characters are exactly what file names must not contain
     .replace(/[\\/:*?"<>|\x00-\x1f]/g, '_')
     .replace(/[. ]+$/, '')

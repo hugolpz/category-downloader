@@ -22,13 +22,13 @@ export class Engine {
     const { signal } = ac;
 
     // API calls: refresh the token once on expiry, back off on transient failures.
-    const api = async (params) => {
+    const api = async (params, wiki) => {
       let token = await getToken();
       let refreshed = false;
       for (let attempt = 0; ; attempt++) {
         if (!token) throw new AuthRequired();
         try {
-          return await apiGet(params, token);
+          return await apiGet(params, token, { wiki });
         } catch (e) {
           if (e instanceof AuthExpiredError) {
             if (refreshed) throw new AuthRequired();

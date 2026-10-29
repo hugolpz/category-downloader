@@ -1,5 +1,6 @@
 import { onScopeDispose, ref } from 'vue';
 import { MIN_SEARCH_LENGTH, searchTerm } from '../api/suggestions';
+import { parseCategory } from '../api/wiki';
 
 /**
  * Debounced, cancellable, cached suggestions while the user types. Call inside `setup()`.
@@ -15,7 +16,7 @@ export function useCategorySuggestions({ search, delayMs = 300, minLength = MIN_
   /** True once a search for the current text finished (so "no match" can be told apart from "not searched yet"). */
   const searched = ref(false);
   const pending = ref(false);
-  const cache = new Map(); // search term (lowercase) -> results, for this page session
+  const cache = new Map(); // wiki prefix + search term (lowercase) -> results, for this page session
   let timer;
   let controller;
   let latest = 0; // only the newest request may update the list
@@ -36,7 +37,7 @@ export function useCategorySuggestions({ search, delayMs = 300, minLength = MIN_
 
     clearTimeout(timer);
     controller?.abort();
-    const key = term.toLowerCase();
+    const key = `${parseCategory(typed).prefix}|${term.toLowerCase()}`;
     if (cache.has(key)) {
       latest++;
       items.value = cache.get(key);

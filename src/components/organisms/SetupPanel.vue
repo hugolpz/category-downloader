@@ -9,6 +9,7 @@ import { suggestCategories, toMenuItem } from '../../api/suggestions';
 import { useCategorySuggestions } from '../../composables/useCategorySuggestions';
 import { useCyclingPlaceholder } from '../../composables/useCyclingPlaceholder';
 import { EXAMPLE_CATEGORIES } from '../../utils/exampleCategories';
+import { categoryLabel, categoryName } from '../../utils/categoryPath';
 
 const auth = useAuthStore();
 const setup = useSetupStore();
@@ -78,7 +79,9 @@ async function copyLink() {
         >
         <div>
           <h2 id="category-title" class="text-xl">Which category?</h2>
-          <p class="muted text-sm">Type a Commons category name, with or without “Category:”.</p>
+          <p class="muted text-sm">
+            Type a Category name, with or without “Category:”. Use a prefix such as <code>es:wp:</code> to change wiki.
+          </p>
         </div>
       </header>
 
@@ -113,7 +116,7 @@ async function copyLink() {
       <p v-if="setup.rootInfo" id="category-summary" class="mt-4 flex items-center gap-2 text-base">
         <CdxIcon :icon="cdxIconCheck" size="small" style="color: var(--forest)" />
         <span
-          ><strong>{{ setup.rootTitle.replace(/^Category:/, '') }}</strong> has
+          ><strong>{{ categoryLabel(setup.rootTitle) }}</strong> has
           <strong class="num">{{ setup.rootInfo.files.toLocaleString() }}</strong> files.</span
         >
       </p>
@@ -154,7 +157,7 @@ async function copyLink() {
                     style="accent-color: var(--forest)"
                   />
                   <span class="flex-1 truncate">
-                    {{ row.title.replace(/^Category:/, '') }}
+                    {{ categoryName(row.title) }}
                     <span
                       v-if="row.isTop"
                       id="top-category-badge"

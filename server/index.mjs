@@ -17,7 +17,10 @@ const CLIENT_ID = process.env.OAUTH_CLIENT_ID ?? process.env.VITE_OAUTH_CLIENT_I
 const REDIRECT_URI = process.env.OAUTH_REDIRECT_URI ?? process.env.VITE_OAUTH_REDIRECT_URI;
 const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 const TOKEN_URL = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
-const API_URL = 'https://commons.wikimedia.org/w/api.php';
+const COMMONS_HOST = 'commons.wikimedia.org';
+// The `wiki` query parameter picks the wiki to ask. Only Wikimedia wikis are accepted, so this is not an open proxy.
+const WIKI_HOST =
+  /^(?:[a-z]{2,3}(?:-[a-z]+)*\.(?:wikipedia|wiktionary|wikibooks|wikinews|wikiquote|wikisource|wikiversity|wikivoyage)\.org|commons\.wikimedia\.org|meta\.wikimedia\.org|www\.wikidata\.org|www\.mediawiki\.org)$/;
 // Wikimedia's UA policy wants a descriptive agent with contact info; browsers cannot set one, so we do.
 const USER_AGENT = `CategoryDownloader/0.1 (${process.env.CONTACT ?? 'https://github.com/hugolpz'}) node`;
 const APP_ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -118,17 +121,20 @@ async function handleAuth(req, res, path) {
   return json(res, 404, { error: 'not_found' });
 }
 
-// Same-origin relay to the Commons Action API: avoids CORS (Commons only allows listed origins)
-// and lets us send a proper User-Agent. Fixed upstream host, GET only, so it is not an open proxy.
+// Same-origin relay to the Action API of Commons (or another Wikimedia wiki): avoids CORS (they only allow listed origins)
+// and lets us send a proper User-Agent. Upstream host from a fixed list, GET only, so it is not an open proxy.
 async function handleApi(req, res, search) {
   if (req.method !== 'GET' || req.headers['x-requested-with'] !== 'CategoryDownloader') {
     return json(res, 403, { error: 'forbidden' });
   }
   const params = new URLSearchParams(search);
   params.delete('origin');
+  const wiki = params.get('wiki') ?? COMMONS_HOST;
+  params.delete('wiki');
+  if (!WIKI_HOST.test(wiki)) return json(res, 400, { error: 'unknown_wiki' });
   const headers = { 'User-Agent': USER_AGENT, 'Accept-Encoding': 'identity' };
   if (req.headers.authorization?.startsWith('Bearer ')) headers.Authorization = req.headers.authorization;
-  const up = await fetch(`${API_URL}?${params}`, { headers });
+  const up = await fetch(`https://${wiki}/w/api.php?${params}`, { headers });
   const out = { 'Content-Type': up.headers.get('content-type') ?? 'application/json', 'Cache-Control': 'no-store' };
   const retry = up.headers.get('retry-after');
   if (retry) out['Retry-After'] = retry;

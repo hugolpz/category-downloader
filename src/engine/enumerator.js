@@ -1,4 +1,5 @@
 import { sleep } from './downloader';
+import { parseCategory } from '../api/wiki';
 import { makeMatcher } from './filter';
 
 /** The only extmetadata keys we keep. Also sent as `iiextmetadatafilter`, so the server returns just these. */
@@ -26,29 +27,36 @@ export async function enumerateStep(db, api, jobId, beforeCommit) {
     return false;
   }
   const cursor = job.cursors[category] ?? { done: false };
+  const { host, title: cmtitle } = parseCategory(category); // a category of another wiki is stored as "fr:wp:Category:Foo"
 
-  const list = await api({
-    action: 'query',
-    list: 'categorymembers',
-    cmtitle: category,
-    cmtype: 'file',
-    cmsort: 'sortkey',
-    cmlimit: String(job.pageSize),
-    ...(cursor.cmcontinue ? { cmcontinue: cursor.cmcontinue } : {}),
-  });
+  const list = await api(
+    {
+      action: 'query',
+      list: 'categorymembers',
+      cmtitle,
+      cmtype: 'file',
+      cmsort: 'sortkey',
+      cmlimit: String(job.pageSize),
+      ...(cursor.cmcontinue ? { cmcontinue: cursor.cmcontinue } : {}),
+    },
+    host,
+  );
   const members = list.query.categorymembers;
 
   const matches = makeMatcher(job.filter);
   const rows = [];
   for (let i = 0; i < members.length; i += job.imageinfoBatch) {
     const ids = members.slice(i, i + job.imageinfoBatch).map((m) => m.pageid);
-    const info = await api({
-      action: 'query',
-      prop: 'imageinfo',
-      pageids: ids.join('|'),
-      iiprop: IIPROP,
-      iiextmetadatafilter: EXTMETADATA_KEYS.join('|'),
-    });
+    const info = await api(
+      {
+        action: 'query',
+        prop: 'imageinfo',
+        pageids: ids.join('|'),
+        iiprop: IIPROP,
+        iiextmetadatafilter: EXTMETADATA_KEYS.join('|'),
+      },
+      host,
+    );
     for (const p of info.query.pages) {
       const ii = p.imageinfo?.[0];
       if (!ii) continue; // deleted/missing between the two calls

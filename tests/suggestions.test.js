@@ -47,8 +47,16 @@ describe('suggestCategories', () => {
         prop: 'categoryinfo',
       },
       'tok',
-      { signal },
+      { signal, wiki: 'commons.wikimedia.org' },
     );
+  });
+
+  it('asks the wiki named by a prefix, and names results with it', async () => {
+    apiGet.mockResolvedValue({ query: { pages: [{ title: 'Catégorie:Guatemala', index: 1, categoryinfo: { files: 2, subcats: 0 } }] } });
+    const found = await suggestCategories('fr:wp:Category:Guatemala', 'tok');
+    expect(apiGet.mock.calls[0][2].wiki).toBe('fr.wikipedia.org');
+    expect(apiGet.mock.calls[0][0].gpssearch).toBe('Guatemala');
+    expect(found[0].title).toBe('fr:wp:Category:Guatemala');
   });
 
   it('returns the suggestions best match first (by `index`, not by the order of `pages`) with their counts', async () => {

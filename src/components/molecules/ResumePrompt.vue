@@ -4,7 +4,7 @@ import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import { cdxIconPlay } from '@wikimedia/codex-icons';
 import { useAuthStore } from '../../stores/auth';
 import { useJobStore } from '../../stores/job';
-import { jobRoot } from '../../utils/categoryPath';
+import { categoryLabel, jobRoot } from '../../utils/categoryPath';
 
 const auth = useAuthStore();
 const job = useJobStore();
@@ -24,7 +24,7 @@ async function discard() {
   <section v-if="job.unfinished && !job.jobId" id="resume-prompt" class="card p-5" style="border-left: 4px solid var(--maize)">
     <h2 id="resume-prompt-title" class="mb-1 text-xl">Welcome back. Pick up where you left off?</h2>
     <p class="muted mb-4">
-      <strong style="color: var(--ink)">{{ jobRoot(job.unfinished).replace(/^Category:/, '') }}</strong>
+      <strong style="color: var(--ink)">{{ categoryLabel(jobRoot(job.unfinished)) }}</strong>
       <span v-if="subcategoryCount"> (+{{ subcategoryCount }} subcategories)</span>
       <span v-if="rootExcluded"> (without the top category's own files)</span>
       · started {{ new Date(job.unfinished.startedAt).toLocaleString() }}

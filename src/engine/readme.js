@@ -1,4 +1,5 @@
 import { EXTMETADATA_KEYS, IIPROP } from './enumerator';
+import { parseCategory } from '../api/wiki';
 import { jobRoot } from '../utils/categoryPath';
 
 // The wording lives in a plain Markdown file so it can be edited without touching code.
@@ -12,10 +13,12 @@ const STATUS = {
   error: 'stopped by an error (can be resumed)',
 };
 
-const API_URL = 'https://commons.wikimedia.org/w/api.php';
 const MAX_FAILED_LISTED = 100;
 const num = (n) => n.toLocaleString('en');
-const wikiUrl = (category) => `https://commons.wikimedia.org/wiki/${encodeURI(category.replace(/ /g, '_'))}`;
+const wikiUrl = (category) => {
+  const { host, title } = parseCategory(category);
+  return `https://${host}/wiki/${encodeURI(title.replace(/ /g, '_'))}`;
+};
 
 /**
  * Tiny template engine: `{{name}}`, `{{#if flag}}…{{else}}…{{/if}}` (no nesting).
@@ -31,6 +34,7 @@ export function renderTemplate(tpl, values, flags) {
 
 export function buildReadme({ job, phase, counts, failed, now }) {
   const root = jobRoot(job);
+  const { host, name, title: rootTitle } = parseCategory(root);
   const subs = job.categories.filter((c) => c !== root);
   const listed = counts.done + counts.failed + counts.pending;
   const hidden = counts.failed - MAX_FAILED_LISTED;
@@ -40,7 +44,7 @@ export function buildReadme({ job, phase, counts, failed, now }) {
   if (hidden > 0) failedLines.push(`- … and ${num(hidden)} more`);
 
   const values = {
-    name: root.replace(/^Category:/, ''),
+    name: host === 'commons.wikimedia.org' ? name : `${name} (${host})`,
     status: STATUS[phase],
     downloaded: num(counts.done),
     listed: num(listed),
@@ -53,8 +57,8 @@ export function buildReadme({ job, phase, counts, failed, now }) {
     batch_size: String(job.imageinfoBatch),
     iiprop: IIPROP,
     extmetadata_filter: EXTMETADATA_KEYS.join('|'),
-    category_param: encodeURIComponent(root).replace(/%3A/g, ':'),
-    api_url: API_URL,
+    category_param: encodeURIComponent(rootTitle).replace(/%3A/g, ':'),
+    api_url: `https://${host}/w/api.php`,
     subcategory_count: String(subs.length),
     subcategory_list: subs.map((s) => `  - <${wikiUrl(s)}>`).join('\n'),
     failed_list: failedLines.join('\n'),

@@ -21,6 +21,12 @@ describe('routes', () => {
     expect(router.resolve('/job/12').name).toBe('not-found'); // the old shape is gone
   });
 
+  it('accepts a wiki prefix before Category:', () => {
+    expect(router.resolve('/fr:wp:Category:Guatemala').params.category).toBe('fr:wp:Category:Guatemala');
+    expect(router.resolve('/c:Category:Foo').name).toBe('category');
+    expect(router.resolve('/fr:wp:Foo').name).toBe('not-found');
+  });
+
   it('accepts the awkward titles Commons allows: parentheses, slashes, percent signs, accents, any case of the prefix', () => {
     expect(router.resolve('/Category:Lingua_Libre_pronunciation-other_(Q36759)').params.category).toBe(
       'Category:Lingua_Libre_pronunciation-other_(Q36759)',
