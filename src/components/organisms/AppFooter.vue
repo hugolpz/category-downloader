@@ -1,5 +1,13 @@
 <script setup>
+import { onMounted } from 'vue';
 import { t } from '../../i18n';
+
+// Vue templates can't contain <script>, so the counter embed is injected on mount.
+onMounted(() => {
+  const script = document.createElement('script');
+  script.src = 'https://toolcounter.toolforge.org/embed.js.php?tool=category-downloader&page=footer&style=badge';
+  document.body.appendChild(script);
+});
 </script>
 
 <template>
@@ -17,6 +25,9 @@ import { t } from '../../i18n';
           >Hugo Lopez</a
         >
       </span>
+      <span class="flex-1" />
+      <span id="tc-views"></span>
+      <span id="tc-sessions"></span>
       <span class="flex-1" />
       <span id="privacy-note">{{ t('cd-footer-privacy') }}</span>
     </div>
